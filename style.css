@@ -1,0 +1,488 @@
+:root {
+  /* Material 3 Inspired Dark Theme Tokens */
+  --md-sys-color-background: #0b0c0e;
+  --md-sys-color-surface: #15161a;
+  --md-sys-color-surface-container: #1e1f25;
+  --md-sys-color-surface-container-high: #2b2d33;
+  --md-sys-color-on-surface: #e2e2e6;
+  --md-sys-color-on-surface-variant: #c4c6d0;
+  --md-sys-color-outline: #8e9099;
+  --md-sys-color-outline-variant: #44474f;
+
+  /* Brand Colors */
+  --color-fin-primary: #d0bcff;
+  --color-fin-container: #4f378b;
+  --color-fin-on-container: #eaddff;
+
+  --color-anti-primary: #6dd58c; /* Softer green */
+  --color-anti-container: #00532a;
+  --color-anti-on-container: #8cf7a8;
+
+  --color-success: #6dd58c;
+  --color-error: #ffb4ab;
+  --color-warning: #ffdcb8;
+
+  /* Typography */
+  --font-family-base: "Outfit", system-ui, -apple-system, sans-serif;
+
+  /* Elevation & Effects */
+  --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.15);
+  --elevation-2:
+    0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --transition-default: 250ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-surface);
+  font-family: var(--font-family-base);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  line-height: 1.5;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Desktop layout */
+@media (min-width: 900px) {
+  .app-container {
+    flex-direction: row;
+    align-items: flex-start;
+    padding-top: 40px;
+  }
+}
+
+/* --- Main Content Section --- */
+.main-content {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header */
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+}
+
+header h1 {
+  font-weight: 600;
+  font-size: 2rem;
+  letter-spacing: -0.5px;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Date Navigation */
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--md-sys-color-surface-container);
+  padding: 8px 16px;
+  border-radius: 100px; /* Pillow shape */
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#current-date {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 500;
+  min-width: 150px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-default);
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--md-sys-color-on-surface);
+}
+
+.nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* --- Cards --- */
+.med-card {
+  background: var(--md-sys-color-surface-container);
+  border-radius: 28px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: var(--transition-default);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+/* .med-card:hover removed as per request */
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.5rem;
+  transition: var(--transition-default);
+}
+
+.fin-icon {
+  background: var(--color-fin-container);
+  color: var(--color-fin-primary);
+}
+
+.anti-icon {
+  background: var(--color-anti-container);
+  color: var(--color-anti-primary);
+}
+
+.med-info {
+  flex: 1;
+}
+
+.med-info h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 4px;
+}
+
+.med-info p {
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Progress Bar */
+.progress-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--color-anti-primary);
+  border-radius: 10px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Checkbox Styling - Premium Task Completion Button */
+.checkbox-wrapper {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.checkbox-wrapper input {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* The circle container */
+.custom-checkbox {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: 50%; /* Circle */
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Spring */
+  background-color: transparent;
+  pointer-events: none;
+}
+
+.checkbox-wrapper:hover .custom-checkbox {
+  border-color: var(--md-sys-color-on-surface);
+  transform: scale(1.05);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Checkmark */
+.custom-checkbox::after {
+  content: "";
+  position: absolute;
+  left: 8px; /* Centering adjusted for 28px width (28-2-2=24 inner. mark is approx 6x12. Left ~ (24-8)/2 + offset? Trial: 8px) */
+  top: 4px;
+  width: 6px;
+  height: 12px;
+  border: solid var(--md-sys-color-surface); /* Icon color reflects bg surface for contrast against fill */
+  border-width: 0 2.5px 2.5px 0; /* Thicker stroke */
+  transform: rotate(45deg) scale(0);
+  opacity: 0;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Checked State */
+.checkbox-wrapper input:checked + .custom-checkbox {
+  background-color: var(--color-success);
+  border-color: var(--color-success);
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(109, 213, 140, 0.4);
+}
+
+.checkbox-wrapper input:checked + .custom-checkbox::after {
+  transform: rotate(45deg) scale(1);
+  opacity: 1;
+}
+
+/* Finasteride Specific Theme */
+#fin-check:checked + .custom-checkbox {
+  background-color: var(--color-fin-primary);
+  border-color: var(--color-fin-primary);
+  box-shadow: 0 0 15px rgba(208, 188, 255, 0.4);
+}
+#fin-check:checked + .custom-checkbox::after {
+  border-color: var(
+    --color-fin-container
+  ); /* Dark purple tick on light purple bg */
+}
+
+/* Antibiotic Specific Theme (if generic green isn't enough) */
+/* Morn/Night inputs use default success green logic which matches anti-primary */
+
+/* Antibiotics Specifics */
+.anti-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dose-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dose-row span {
+  font-size: 1rem;
+  color: var(--md-sys-color-on-surface);
+  font-weight: 500;
+}
+
+#course-completed-msg {
+  text-align: center;
+  color: var(--color-success);
+  font-weight: 600;
+  padding: 12px;
+  background: rgba(109, 213, 140, 0.1);
+  border-radius: 12px;
+  margin-top: 8px;
+  animation: fadeIn 0.5s ease;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* --- Calendar Sidebar --- */
+.calendar-sidebar {
+  width: 100%;
+  background: var(--md-sys-color-surface);
+  border-radius: 28px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+@media (min-width: 900px) {
+  .calendar-sidebar {
+    width: 360px;
+    position: sticky;
+    top: 40px;
+  }
+}
+
+.calendar-sidebar h3 {
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--md-sys-color-on-surface);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.cal-day:hover {
+  background: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface);
+}
+
+.cal-day.active-day {
+  background: var(--md-sys-color-primary, #ffffff);
+  color: black;
+  font-weight: 700;
+  transform: scale(1.1);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+}
+
+.cal-day.empty {
+  cursor: default;
+  background: transparent;
+}
+
+/* Main Day Number */
+.day-num {
+  z-index: 2;
+  font-weight: 500;
+}
+
+/* Dots Container */
+.cal-dots {
+  position: absolute;
+  bottom: 6px;
+  display: flex;
+  gap: 3px; /* Gap between dots */
+  z-index: 1;
+}
+
+.dot-ind {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.dot-fin {
+  background-color: var(--color-fin-primary);
+  box-shadow: 0 0 5px rgba(208, 188, 255, 0.4);
+}
+
+.dot-anti {
+  background-color: var(--color-anti-primary);
+  box-shadow: 0 0 5px rgba(109, 213, 140, 0.4);
+}
+
+/* Adjustments for Active Day visibility */
+.cal-day.active-day .dot-fin {
+  background-color: var(--md-sys-color-surface); /* Invert against white bg */
+  border: 1px solid var(--color-fin-container);
+}
+.cal-day.active-day .dot-anti {
+  background-color: var(--md-sys-color-surface);
+  border: 1px solid var(--color-anti-container);
+}
+
+/* Legend Update needed? The user removed 'perfect/partial'.
+   We should probably hide the old legend in HTML or re-style it.
+   For now, just ensuring dots render nicely. */
+.calendar-legend {
+  display: none; /* Hide old legend as requested 'doesn't help' */
+}
+
+/* Today Indicator */
+.cal-day.status-today {
+  border: 1px solid var(--md-sys-color-outline);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 16px;
+  }
+
+  header h1 {
+    font-size: 1.75rem;
+  }
+}

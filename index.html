@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MedTracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css?v=5" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Main Tracker Area -->
+      <div class="main-content">
+        <header>
+          <h1>Daily Intake</h1>
+          <div class="date-nav">
+            <button id="prev-date" class="nav-btn" aria-label="Previous Day">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <p id="current-date">October 27, 2023</p>
+            <button id="next-date" class="nav-btn" aria-label="Next Day">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <main>
+          <!-- Finasteride Card -->
+          <div class="med-card" id="fin-card">
+            <div class="card-header">
+              <div class="icon-box fin-icon">F</div>
+              <div class="med-info">
+                <h2>Finasteride</h2>
+                <p>1 tablet per day</p>
+              </div>
+            </div>
+            <div class="checkbox-wrapper">
+              <input type="checkbox" id="fin-check" />
+              <label for="fin-check" class="custom-checkbox"></label>
+            </div>
+          </div>
+
+          <!-- Antibiotics Card -->
+          <div class="med-card" id="anti-card">
+            <div class="card-header">
+              <div class="icon-box anti-icon">A</div>
+              <div class="med-info">
+                <h2>Antibiotics</h2>
+                <p id="anti-progress">0/20 Tablets Taken</p>
+              </div>
+            </div>
+            <div class="progress-container">
+              <div
+                class="progress-bar"
+                id="anti-progress-bar"
+                style="width: 0%"
+              ></div>
+            </div>
+            <div class="anti-controls">
+              <div class="dose-row">
+                <span>Morning</span>
+                <div class="checkbox-wrapper">
+                  <input type="checkbox" id="anti-morn" />
+                  <label for="anti-morn" class="custom-checkbox"></label>
+                </div>
+              </div>
+              <div class="dose-row">
+                <span>Night</span>
+                <div class="checkbox-wrapper">
+                  <input type="checkbox" id="anti-night" />
+                  <label for="anti-night" class="custom-checkbox"></label>
+                </div>
+              </div>
+            </div>
+            <div id="course-completed-msg" class="hidden">
+              Course Completed 🎉
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <!-- Sidebar Calendar -->
+      <aside class="calendar-sidebar">
+        <h3 id="cal-month-year">October 2023</h3>
+        <div class="calendar-grid" id="calendar-grid">
+          <!-- Days injected by JS -->
+        </div>
+        <div class="calendar-legend">
+          <div class="legend-item">
+            <span class="dot dot-perfect"></span>Perfect
+          </div>
+          <div class="legend-item">
+            <span class="dot dot-partial"></span>Partial
+          </div>
+          <div class="legend-item">
+            <span class="dot dot-missed"></span>Missed
+          </div>
+        </div>
+      </aside>
+    </div>
+    <script src="app.js?v=5"></script>
+  </body>
+</html>
