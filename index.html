@@ -8,8 +8,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap"
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css?v=5" />
   </head>
   <body>
@@ -18,8 +21,13 @@
       <div class="main-content">
         <header>
           <h1>Daily Intake</h1>
-          <div class="date-nav">
-            <button id="prev-date" class="nav-btn" aria-label="Previous Day">
+          <div style="display: flex; gap: 12px; align-items: center">
+            <!-- Settings Button -->
+            <button
+              id="settings-btn"
+              class="icon-btn"
+              aria-label="Manage Medications"
+            >
               <svg
                 width="24"
                 height="24"
@@ -28,77 +36,46 @@
                 stroke="currentColor"
                 stroke-width="2"
               >
-                <path d="M15 18l-6-6 6-6" />
+                <path
+                  d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.18-.08a2 2 0 0 0-2 2v.44a2 2 0 0 0 2 2h.18a2 2 0 0 1 1.73 1l.25.43a2 2 0 0 1 0 2l-.08.18a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.18.08a2 2 0 0 0 2-2v-.44a2 2 0 0 0-2-2h-.18a2 2 0 0 1-1.73-1l-.25-.43a2 2 0 0 1 0-2l.08-.18a2 2 0 0 0-2-2z"
+                ></path>
+                <circle cx="12" cy="12" r="3"></circle>
               </svg>
             </button>
-            <p id="current-date">October 27, 2023</p>
-            <button id="next-date" class="nav-btn" aria-label="Next Day">
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
+
+            <!-- Date Nav -->
+            <div class="date-nav">
+              <button id="prev-date" class="nav-btn" aria-label="Previous Day">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <p id="current-date">October 27, 2023</p>
+              <button id="next-date" class="nav-btn" aria-label="Next Day">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </div>
           </div>
         </header>
 
-        <main>
-          <!-- Finasteride Card -->
-          <div class="med-card" id="fin-card">
-            <div class="card-header">
-              <div class="icon-box fin-icon">F</div>
-              <div class="med-info">
-                <h2>Finasteride</h2>
-                <p>1 tablet per day</p>
-              </div>
-            </div>
-            <div class="checkbox-wrapper">
-              <input type="checkbox" id="fin-check" />
-              <label for="fin-check" class="custom-checkbox"></label>
-            </div>
-          </div>
-
-          <!-- Antibiotics Card -->
-          <div class="med-card" id="anti-card">
-            <div class="card-header">
-              <div class="icon-box anti-icon">A</div>
-              <div class="med-info">
-                <h2>Antibiotics</h2>
-                <p id="anti-progress">0/20 Tablets Taken</p>
-              </div>
-            </div>
-            <div class="progress-container">
-              <div
-                class="progress-bar"
-                id="anti-progress-bar"
-                style="width: 0%"
-              ></div>
-            </div>
-            <div class="anti-controls">
-              <div class="dose-row">
-                <span>Morning</span>
-                <div class="checkbox-wrapper">
-                  <input type="checkbox" id="anti-morn" />
-                  <label for="anti-morn" class="custom-checkbox"></label>
-                </div>
-              </div>
-              <div class="dose-row">
-                <span>Night</span>
-                <div class="checkbox-wrapper">
-                  <input type="checkbox" id="anti-night" />
-                  <label for="anti-night" class="custom-checkbox"></label>
-                </div>
-              </div>
-            </div>
-            <div id="course-completed-msg" class="hidden">
-              Course Completed 🎉
-            </div>
-          </div>
+        <main id="med-list">
+          <!-- Dynamic Content Will Be Injected Here -->
         </main>
       </div>
 
@@ -108,19 +85,33 @@
         <div class="calendar-grid" id="calendar-grid">
           <!-- Days injected by JS -->
         </div>
-        <div class="calendar-legend">
-          <div class="legend-item">
-            <span class="dot dot-perfect"></span>Perfect
-          </div>
-          <div class="legend-item">
-            <span class="dot dot-partial"></span>Partial
-          </div>
-          <div class="legend-item">
-            <span class="dot dot-missed"></span>Missed
-          </div>
-        </div>
       </aside>
     </div>
-    <script src="app.js?v=5"></script>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="modal-title">Manage Medications</h2>
+          <button id="modal-close" class="close-btn">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="modal-body" class="modal-body">
+          <!-- Dynamic Form/List Content -->
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js?v=6"></script>
   </body>
 </html>

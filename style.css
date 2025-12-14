@@ -14,6 +14,11 @@
   --color-fin-container: #4f378b;
   --color-fin-on-container: #eaddff;
 
+  /* Minoxidil Colors */
+  --color-minox-primary: #ffb74d; /* Orange/Amber */
+  --color-minox-container: #5d4000;
+  --color-minox-on-container: #ffefc0;
+
   --color-anti-primary: #6dd58c; /* Softer green */
   --color-anti-container: #00532a;
   --color-anti-on-container: #8cf7a8;
@@ -187,6 +192,11 @@ header h1 {
   color: var(--color-anti-primary);
 }
 
+.minox-icon {
+  background: var(--color-minox-container);
+  color: var(--color-minox-primary);
+}
+
 .med-info {
   flex: 1;
 }
@@ -305,6 +315,18 @@ main {
   ); /* Dark purple tick on light purple bg */
 }
 
+/* Minoxidil Specific Theme */
+#minox-morn:checked + .custom-checkbox,
+#minox-night:checked + .custom-checkbox {
+  background-color: var(--color-minox-primary);
+  border-color: var(--color-minox-primary);
+  box-shadow: 0 0 15px rgba(255, 183, 77, 0.4);
+}
+#minox-morn:checked + .custom-checkbox::after,
+#minox-night:checked + .custom-checkbox::after {
+  border-color: var(--color-minox-container);
+}
+
 /* Antibiotic Specific Theme (if generic green isn't enough) */
 /* Morn/Night inputs use default success green logic which matches anti-primary */
 
@@ -416,42 +438,35 @@ main {
 .day-num {
   z-index: 2;
   font-weight: 500;
+  position: relative;
 }
 
-/* Dots Container */
-.cal-dots {
+/* Segmented Ring Container */
+.cal-day::after {
+  content: "";
   position: absolute;
-  bottom: 6px;
-  display: flex;
-  gap: 3px; /* Gap between dots */
-  z-index: 1;
-}
-
-.dot-ind {
-  width: 5px;
-  height: 5px;
+  inset: 2px;
   border-radius: 50%;
+
+  /* The gradient will be set via inline style --day-gradient */
+  background: var(--day-gradient, transparent);
+
+  /* Create the donut hole */
+  -webkit-mask: radial-gradient(closest-side, transparent 78%, black 80%);
+  mask: radial-gradient(closest-side, transparent 78%, black 80%);
+
+  z-index: 1;
+  transition: background 0.3s ease;
 }
 
-.dot-fin {
-  background-color: var(--color-fin-primary);
-  box-shadow: 0 0 5px rgba(208, 188, 255, 0.4);
+/* Adjust active day */
+.cal-day.active-day::after {
+  /* Ensure ring remains visible on active day. 
+      The active day background is set on the parent .cal-day. 
+      The ring sits on top. */
 }
 
-.dot-anti {
-  background-color: var(--color-anti-primary);
-  box-shadow: 0 0 5px rgba(109, 213, 140, 0.4);
-}
-
-/* Adjustments for Active Day visibility */
-.cal-day.active-day .dot-fin {
-  background-color: var(--md-sys-color-surface); /* Invert against white bg */
-  border: 1px solid var(--color-fin-container);
-}
-.cal-day.active-day .dot-anti {
-  background-color: var(--md-sys-color-surface);
-  border: 1px solid var(--color-anti-container);
-}
+/* Checkboxes & Legends removed as we rely on the ring now */
 
 /* Legend Update needed? The user removed 'perfect/partial'.
    We should probably hide the old legend in HTML or re-style it.
@@ -486,3 +501,475 @@ main {
     font-size: 1.75rem;
   }
 }
+
+/* --- Premium Modal & Settings UI --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: #18181b; /* More neutral dark */
+  width: 95%;
+  max-width: 480px;
+  max-height: 85vh;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5);
+  transform: translateY(20px) scale(0.98);
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+  overflow: hidden;
+}
+
+.modal-overlay.open .modal {
+  transform: translateY(0) scale(1);
+}
+
+.modal-header {
+  padding: 24px 28px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: white;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  transform: rotate(90deg);
+}
+
+.modal-body {
+  padding: 28px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Scrollbar hiding for cleaner modal */
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* Settings List Item */
+.settings-med-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05); /* Subtle border */
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+
+.settings-med-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: scale(1.01);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.settings-med-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* The colored square icon */
+.mini-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.med-name-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Form Styles */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  background: #09090b; /* Very dark input bg */
+  border: 2px solid transparent; /* Better focus logic */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 14px 18px;
+  border-radius: 16px;
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.form-input:focus,
+.form-select:focus {
+  background: #121215;
+  border-color: var(--md-sys-color-primary, #d0bcff);
+  box-shadow: 0 0 0 4px rgba(208, 188, 255, 0.15);
+}
+
+/* Color Picker */
+.color-picker {
+  display: flex;
+  gap: 16px;
+  padding: 8px 4px; /* Padding for hover growth */
+}
+
+.color-option {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.color-option:hover {
+  transform: translateY(-4px);
+}
+
+.color-option.selected {
+  border-color: white;
+  transform: translateY(-4px) scale(1.1);
+  box-shadow: 0 8px 20px -4px currentColor;
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-primary, #d0bcff) 0%,
+    #9a82db 100%
+  );
+  color: #1a1a1a;
+  border: none;
+  padding: 16px;
+  border-radius: 18px;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 12px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(208, 188, 255, 0.25);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(208, 188, 255, 0.4);
+  filter: brightness(1.1);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 14px;
+  border-radius: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: white;
+}
+
+.btn-danger {
+  color: #ff897d;
+  background: rgba(255, 137, 125, 0.1);
+  border: 1px solid rgba(255, 137, 125, 0.2);
+  padding: 14px;
+  border-radius: 18px;
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+  margin-top: 24px;
+  transition: 0.2s;
+}
+
+.btn-danger:hover {
+  background: rgba(255, 137, 125, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Header Action Button - Enhanced */
+.icon-btn {
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--md-sys-color-on-surface);
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.modal-overlay.open .modal {
+  transform: scale(1);
+}
+
+.modal-header {
+  padding: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--md-sys-color-on-surface);
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Med List Item in Settings */
+.settings-med-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--md-sys-color-surface-container);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settings-med-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mini-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem; /* Smaller font for mini icon */
+  color: var(--md-sys-color-surface); /* Contrast text */
+}
+
+/* Form Styles */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 500;
+}
+
+.form-input,
+.form-select {
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+  transition: 0.2s;
+}
+
+.form-input:focus,
+.form-select:focus {
+  border-color: var(--md-sys-color-primary, #d0bcff);
+}
+
+.color-picker {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: 0.2s;
+}
+
+.color-option.selected {
+  border-color: white;
+  transform: scale(1.1);
+}
+
+.btn-primary {
+  background: var(--md-sys-color-primary, #d0bcff);
+  color: var(--md-sys-color-surface);
+  border: none;
+  padding: 14px;
+  border-radius: 100px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+  transition: 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px;
+  border-radius: 100px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn-danger {
+  color: var(--color-error);
+  background: rgba(255, 180, 171, 0.1);
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 12px;
+}
+
+/* Header Action Button */
+.icon-btn {
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--md-sys-color-on-surface);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.icon-btn:hover {
+  background: var(--md-sys-color-surface-container-high);
+}
+
+/* Dynamic Med Card Styles - we will set these via JS inline styles mainly, 
+   but we can have a base class */
