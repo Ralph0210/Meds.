@@ -310,13 +310,18 @@ export default function EditMedicationModal({
                       >
                         {/* Split UI: Time Mode vs Preset Mode */}
                         {isTimeMode ? (
-                          <>
+                          form.times.length > 1 ? (
+                            /* Multi-slot: Combined TimePicker + Chevron in one container */
                             <View
                               style={{
-                                flex: 1,
-                                alignItems: "center", // Centered horizontally
-                                justifyContent: "center", // Centered vertically
-                                height: 40, // Match Dropdown height
+                                flexDirection: "row",
+                                alignItems: "center",
+                                height: 48,
+                                backgroundColor: Colors.surfaceHighlight,
+                                borderRadius: Layout.radius.md,
+                                borderWidth: 1,
+                                borderColor: Colors.white10,
+                                paddingRight: 4,
                               }}
                             >
                               <DateTimePicker
@@ -340,10 +345,11 @@ export default function EditMedicationModal({
                                   }
                                 }}
                                 themeVariant="dark"
-                                style={{ transform: [{ scale: 1.1 }] }}
+                                style={{
+                                  transform: [{ scale: 0.85 }],
+                                  marginLeft: -8,
+                                }}
                               />
-                            </View>
-                            <View style={{ width: 44, alignItems: "flex-end" }}>
                               <Dropdown
                                 value="Time"
                                 options={presets}
@@ -358,10 +364,74 @@ export default function EditMedicationModal({
                                   }
                                   setForm({ ...form, times: newTimes })
                                 }}
-                                width="100%"
+                                width={36}
                               />
                             </View>
-                          </>
+                          ) : (
+                            /* Single-slot: Original split layout */
+                            <>
+                              <View
+                                style={{
+                                  flex: 1,
+                                  height: 48,
+                                  backgroundColor: Colors.surfaceHighlight,
+                                  borderRadius: Layout.radius.md,
+                                  borderWidth: 1,
+                                  borderColor: Colors.white10,
+                                  overflow: "hidden",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <DateTimePicker
+                                  value={getTimeDate(time)}
+                                  mode="time"
+                                  display="compact"
+                                  onChange={(e, date) => {
+                                    if (date) {
+                                      let h = date.getHours()
+                                      const m = String(
+                                        date.getMinutes()
+                                      ).padStart(2, "0")
+                                      const period = h >= 12 ? "PM" : "AM"
+                                      if (h > 12) h -= 12
+                                      if (h === 0) h = 12
+                                      const newTimeStr = `${h}:${m} ${period}`
+
+                                      const newTimes = [...form.times]
+                                      newTimes[index] = newTimeStr
+                                      setForm({ ...form, times: newTimes })
+                                    }
+                                  }}
+                                  themeVariant="dark"
+                                  style={{
+                                    transform: [{ scale: 1.1 }],
+                                    marginLeft: -10,
+                                  }}
+                                />
+                              </View>
+                              <View
+                                style={{ width: 44, alignItems: "flex-end" }}
+                              >
+                                <Dropdown
+                                  value="Time"
+                                  options={presets}
+                                  iconOnly={true}
+                                  menuWidth={120}
+                                  onChange={(val) => {
+                                    const newTimes = [...form.times]
+                                    if (val === "Time") {
+                                      newTimes[index] = "8:00 AM"
+                                    } else {
+                                      newTimes[index] = val
+                                    }
+                                    setForm({ ...form, times: newTimes })
+                                  }}
+                                  width="100%"
+                                />
+                              </View>
+                            </>
+                          )
                         ) : (
                           <View style={{ flex: 1 }}>
                             <Dropdown
@@ -414,7 +484,7 @@ export default function EditMedicationModal({
                                 frequency: newFreq,
                               })
                             }}
-                            style={{ padding: 4 }}
+                            style={{ padding: 4, marginRight: 16 }}
                           >
                             <X size={14} color={Colors.textSecondary} />
                           </TouchableOpacity>
