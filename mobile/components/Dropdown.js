@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Modal,
   Platform,
+  Dimensions,
 } from "react-native"
 import { ChevronDown, Check } from "lucide-react-native"
 import { Colors, Spacing, Layout, Typography } from "../theme"
@@ -17,6 +18,8 @@ export default function Dropdown({
   placeholder = "Select...",
   label,
   width = 120, // Default width
+  iconOnly = false,
+  menuWidth = null,
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [buttonLayout, setButtonLayout] = useState({
@@ -41,17 +44,30 @@ export default function Dropdown({
     }
   }
 
+  const windowWidth = Dimensions.get("window").width
+  const dropdownWidth = menuWidth || Math.max(width, 80)
+  // Auto-align: if it goes off screen to the right, align to right edge of button
+  const shouldAlignRight = buttonLayout.x + dropdownWidth > windowWidth - 16 // 16px buffer
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { zIndex: isOpen ? 1000 : 1 }]}>
       {label && <Text style={styles.label}>{label}</Text>}
 
       <TouchableOpacity
         ref={buttonRef}
-        style={[styles.button, isOpen && styles.buttonActive, { width }]}
+        style={[
+          styles.button,
+          isOpen && styles.buttonActive,
+          iconOnly
+            ? { width: 44, justifyContent: "center", paddingHorizontal: 0 }
+            : { width },
+        ]}
         onPress={toggleDropdown}
         activeOpacity={0.7}
       >
-        <Text style={styles.buttonText}>{value || placeholder}</Text>
+        {!iconOnly && (
+          <Text style={styles.buttonText}>{value || placeholder}</Text>
+        )}
         <ChevronDown
           size={16}
           color={isOpen ? Colors.primary : Colors.textSecondary}
@@ -61,28 +77,24 @@ export default function Dropdown({
         />
       </TouchableOpacity>
 
-      {/* 
-        Using a transparent Modal to handle the overlay and positioning. 
-        This ensures the dropdown behaves correctly regardless of z-index contexts.
-      */}
-      <Modal
-        visible={isOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsOpen(false)}
-      >
-        <TouchableOpacity
-          style={styles.overlay}
-          activeOpacity={1}
-          onPress={() => setIsOpen(false)}
-        >
+      {isOpen && (
+        <>
+          {/* Click outside overlay */}
+          <TouchableOpacity
+            style={styles.overlay}
+            activeOpacity={1}
+            onPress={() => setIsOpen(false)}
+          />
+
           <View
             style={[
               styles.dropdown,
               {
-                top: buttonLayout.y + buttonLayout.h + 4,
-                left: buttonLayout.x,
-                width: Math.max(width, 80), // Min width for dropdown list
+                position: "absolute",
+                top: "100%",
+                marginTop: 4,
+                width: dropdownWidth,
+                ...(shouldAlignRight ? { right: 0 } : { left: 0 }),
               },
             ]}
           >
@@ -107,15 +119,15 @@ export default function Dropdown({
               )
             })}
           </View>
-        </TouchableOpacity>
-      </Modal>
+        </>
+      )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    // Container styles if needed
+    position: "relative",
   },
   label: {
     color: Colors.textSecondary,
@@ -144,11 +156,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.2)", // subtle scrim
+    // Covers the screen to handle outside clicks
+    position: "absolute",
+    top: -1000,
+    left: -1000,
+    right: -1000,
+    bottom: -1000,
+    zIndex: 99,
   },
   dropdown: {
-    position: "absolute",
     backgroundColor: Colors.surface,
     borderRadius: Layout.radius.md,
     borderWidth: 1,
@@ -160,6 +176,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 8,
+    zIndex: 100, // Above overlay
   },
   option: {
     flexDirection: "row",

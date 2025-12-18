@@ -13,14 +13,20 @@ import { useAppStore } from "../store/useAppStore"
 import { LinearGradient } from "expo-linear-gradient"
 import { Colors, Spacing, Layout, Typography } from "../theme"
 import ProgressRing from "./ProgressRing"
-import { Calendar as CalendarIcon, MapPin } from "lucide-react-native"
+import {
+  Calendar as CalendarIcon,
+  MapPin,
+  ChevronDown,
+} from "lucide-react-native"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 
 const ITEM_WIDTH = 48
 const ITEM_MARGIN = Spacing.xs
 const FULL_ITEM_WIDTH = ITEM_WIDTH + ITEM_MARGIN * 2
-const PAST_DAYS = 180
-const FUTURE_DAYS = 180
+const PAST_DAYS = 30
+const FUTURE_DAYS = 30
+const VISIBLE_RANGE = 21 // Cap interaction to +/- 21 days
+const CLAMP_BUFFER = 15 // Allow slight over-scroll before fighting back
 
 function getDates(startDate, count) {
   const dates = []
@@ -128,9 +134,7 @@ const DateItem = memo(
 export default function DateStrip({ config = [], onFocusedDateChange }) {
   const { selectedDate, setSelectedDate } = useAppStore()
   const flatListRef = useRef(null)
-
-  // Track visibility of today's item
-  const [isTodayVisible, setIsTodayVisible] = useState(true)
+  const isProgrammatic = useRef(false)
 
   // Memoize dates to prevent recreation
   const { dates, todayIndex } = useMemo(() => {
@@ -164,63 +168,83 @@ export default function DateStrip({ config = [], onFocusedDateChange }) {
     return index * FULL_ITEM_WIDTH
   }
 
-  const scrollToToday = () => {
-    const today = new Date()
-    setSelectedDate(today)
+  // Pre-calculate limits
+  const minIndex = todayIndex - VISIBLE_RANGE
+  const maxIndex = todayIndex + VISIBLE_RANGE
+  const minOffset = minIndex * FULL_ITEM_WIDTH
+  const maxOffset = maxIndex * FULL_ITEM_WIDTH
 
-    // We can't rely on scrollToIndex with viewPosition 0.5 because of padding/insets sometimes being tricky
-    // Manual offset is safest for "Absolute Center"
-    const offset = getCenterOffset(todayIndex)
-
-    flatListRef.current?.scrollToOffset({
-      offset,
-      animated: true,
-    })
-  }
-
-  // Center on mount
+  // Center on mount and on external selectedDate changes
+  // Center on mount and on external selectedDate changes
   useEffect(() => {
-    // Small timeout to ensure layout is ready
+    // Determine target index
+    const index = dates.findIndex((d) => isSameDay(d, selectedDate))
+    if (index === -1) return
+
+    const offset = getCenterOffset(index)
+
+    // Set guard before scrolling
+    isProgrammatic.current = true
+
+    // We use a small timeout to ensure layout is ready
     const timer = setTimeout(() => {
-      const offset = getCenterOffset(todayIndex)
       flatListRef.current?.scrollToOffset({
         offset,
-        animated: false, // Instant jump on load
+        animated: true,
       })
+
+      // Reset guard after animation (approximate)
+      setTimeout(() => {
+        isProgrammatic.current = false
+      }, 500)
     }, 100)
     return () => clearTimeout(timer)
-  }, [todayIndex])
+  }, [selectedDate, dates])
 
-  const onViewableItemsChanged = useRef(({ viewableItems }) => {
-    const todayItem = viewableItems.find((info) =>
-      isSameDay(info.item, new Date())
-    )
-    setIsTodayVisible(!!todayItem)
+  const onScroll = useCallback(
+    (ev) => {
+      if (isProgrammatic.current) return
 
-    // Notify info about centered date
-    if (onFocusedDateChange && viewableItems.length > 0) {
-      // DISABLED: User wants strict sync with selection ring, not visual center during scroll.
-      // The update is now handled in onMomentumScrollEnd and onPress.
-      /*
-      const midIndex = Math.floor(viewableItems.length / 2)
-      const centerItem = viewableItems[midIndex]?.item
-      if (centerItem) {
-        onFocusedDateChange(centerItem)
+      const offsetX = ev.nativeEvent.contentOffset.x
+
+      // Soft Clamp Logic (Rubber Band simulation)
+      if (offsetX < minOffset - CLAMP_BUFFER) {
+        flatListRef.current?.scrollToOffset({
+          offset: minOffset,
+          animated: true,
+        })
+        return
       }
-      */
-    }
-  }).current
+      if (offsetX > maxOffset + CLAMP_BUFFER) {
+        flatListRef.current?.scrollToOffset({
+          offset: maxOffset,
+          animated: true,
+        })
+        return
+      }
+
+      const index = Math.round(offsetX / FULL_ITEM_WIDTH)
+
+      const clampedIndex = Math.max(0, Math.min(index, dates.length - 1))
+      const centerDate = dates[clampedIndex]
+
+      if (onFocusedDateChange) {
+        onFocusedDateChange(centerDate)
+      }
+    },
+    [dates, onFocusedDateChange, minOffset, maxOffset]
+  )
 
   const handleItemPress = useCallback(
     (item, index) => {
+      // Check range
+      if (Math.abs(index - todayIndex) > VISIBLE_RANGE) return
+
+      // Just update state; let useEffect handle the scrolling to prevent double-scroll conflicts
       setSelectedDate(item)
-      if (onFocusedDateChange) onFocusedDateChange(item) // Link focus immediately
-      flatListRef.current?.scrollToOffset({
-        offset: index * FULL_ITEM_WIDTH,
-        animated: true,
-      })
+      if (onFocusedDateChange) onFocusedDateChange(item)
     },
-    [setSelectedDate, onFocusedDateChange]
+    [setSelectedDate, onFocusedDateChange, todayIndex]
   )
 
   const renderItem = ({ item, index }) => {
@@ -240,6 +264,11 @@ export default function DateStrip({ config = [], onFocusedDateChange }) {
   return (
     <View style={styles.container}>
       <View style={styles.listContainer}>
+        {/* Visual Indicator */}
+        <View style={styles.indicatorContainer} pointerEvents="none">
+          <ChevronDown size={16} color={Colors.primary} />
+        </View>
+
         <FlatList
           ref={flatListRef}
           horizontal
@@ -257,17 +286,60 @@ export default function DateStrip({ config = [], onFocusedDateChange }) {
           snapToInterval={FULL_ITEM_WIDTH}
           snapToAlignment="start"
           decelerationRate="fast"
+          onScroll={onScroll}
+          scrollEventThrottle={16} // Standard for smooth updates
           onMomentumScrollEnd={(ev) => {
+            if (isProgrammatic.current) return
+
             const offsetX = ev.nativeEvent.contentOffset.x
             const index = Math.round(offsetX / FULL_ITEM_WIDTH)
+
+            // Snap Back Logic
+            const diff = index - todayIndex
+            if (Math.abs(diff) > VISIBLE_RANGE) {
+              // Out of bounds - Snap back
+              const targetIndex =
+                diff > 0
+                  ? todayIndex + VISIBLE_RANGE
+                  : todayIndex - VISIBLE_RANGE
+              const offset = getCenterOffset(targetIndex)
+              const targetDate = dates[targetIndex]
+
+              isProgrammatic.current = true
+              flatListRef.current?.scrollToOffset({ offset, animated: true })
+
+              // Also force select the bound date
+              setSelectedDate(targetDate)
+
+              setTimeout(() => {
+                isProgrammatic.current = false
+              }, 500)
+              return
+            }
+
             const clampedIndex = Math.max(0, Math.min(index, dates.length - 1))
             const newDate = dates[clampedIndex]
             if (!isSameDay(newDate, selectedDate)) {
               setSelectedDate(newDate)
-              if (onFocusedDateChange) onFocusedDateChange(newDate) // Sync focus on snap
             }
           }}
-          onViewableItemsChanged={onViewableItemsChanged}
+          onScrollEndDrag={(ev) => {
+            const offsetX = ev.nativeEvent.contentOffset.x
+            let targetOffset = null
+            if (offsetX < minOffset) targetOffset = minOffset
+            else if (offsetX > maxOffset) targetOffset = maxOffset
+
+            if (targetOffset !== null) {
+              isProgrammatic.current = true
+              flatListRef.current?.scrollToOffset({
+                offset: targetOffset,
+                animated: true,
+              })
+              setTimeout(() => {
+                isProgrammatic.current = false
+              }, 500)
+            }
+          }}
           viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
           onScrollToIndexFailed={(info) => {
             const wait = new Promise((resolve) => setTimeout(resolve, 500))
@@ -280,35 +352,29 @@ export default function DateStrip({ config = [], onFocusedDateChange }) {
           }}
         />
       </View>
-
-      {/* Dynamic Floating Today Button */}
-      {!isTodayVisible && (
-        <Animated.View
-          entering={FadeIn.duration(200)}
-          exiting={FadeOut.duration(200)}
-          style={styles.floatingButtonContainer}
-        >
-          <TouchableOpacity
-            style={styles.floatingButton}
-            onPress={scrollToToday}
-          >
-            <Text style={styles.floatingButtonText}>Today</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     flexDirection: "row",
     alignItems: "center",
     position: "relative",
   },
+  indicatorContainer: {
+    position: "absolute",
+    top: -12,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+  },
   listContainer: {
     flex: 1,
+    position: "relative",
   },
   listContent: {
     // paddingHorizontal replaced by inline style SNAP_PADDING

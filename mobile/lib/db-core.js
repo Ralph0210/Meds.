@@ -100,7 +100,45 @@ export const updateMedicationCore = (db, med) => {
 }
 
 export const deleteMedicationCore = (db, id) => {
-  db.runSync("DELETE FROM medications WHERE id = ?", [id])
+  return db.withTransactionSync(() => {
+    // 1. Get medication keys before deletion
+    const med = db.getFirstSync("SELECT keys FROM medications WHERE id = ?", [
+      id,
+    ])
+    const keysToRemove = med ? JSON.parse(med.keys || "[]") : []
+
+    // 2. Delete the medication
+    db.runSync("DELETE FROM medications WHERE id = ?", [id])
+
+    // 3. Cleanup orphaned keys from all records
+    if (keysToRemove.length > 0) {
+      const allRecords = db.getAllSync("SELECT id, data FROM records")
+      for (const record of allRecords) {
+        const data = JSON.parse(record.data || "{}")
+        let modified = false
+
+        for (const key of keysToRemove) {
+          if (key in data) {
+            delete data[key]
+            modified = true
+          }
+        }
+
+        if (modified) {
+          // Update the record with cleaned data
+          if (Object.keys(data).length === 0) {
+            // If no data left, delete the entire record
+            db.runSync("DELETE FROM records WHERE id = ?", [record.id])
+          } else {
+            db.runSync("UPDATE records SET data = ? WHERE id = ?", [
+              JSON.stringify(data),
+              record.id,
+            ])
+          }
+        }
+      }
+    }
+  })
 }
 
 export const getRecordCore = (db, date) => {

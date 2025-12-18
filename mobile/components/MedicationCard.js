@@ -10,6 +10,7 @@ export default function MedicationCard({
   record,
   onViewDate,
   onToggle,
+  disabled = false,
 }) {
   // config: { id, name, description, type, color, bg_color, icon, config: {...}, ... }
   // record: { data: { "key1": true, "key2": false } } (or null)
@@ -78,17 +79,22 @@ export default function MedicationCard({
               </View>
             )}
 
-            <Pressable
-              onPress={() => onToggle(infoKey, !checked)}
-              style={[
-                styles.checkbox,
-                checked
-                  ? { backgroundColor: config.color, borderColor: config.color }
-                  : styles.checkboxUnchecked,
-              ]}
-            >
-              {checked && <Check size={20} color="white" />}
-            </Pressable>
+            {!disabled && (
+              <Pressable
+                onPress={() => onToggle(infoKey, !checked)}
+                style={[
+                  styles.checkbox,
+                  checked
+                    ? {
+                        backgroundColor: config.color,
+                        borderColor: config.color,
+                      }
+                    : styles.checkboxUnchecked,
+                ]}
+              >
+                {checked && <Check size={20} color="white" />}
+              </Pressable>
+            )}
           </View>
         </View>
       )
@@ -123,20 +129,22 @@ export default function MedicationCard({
                     style={[styles.dailyRow, { paddingVertical: Spacing.xs }]}
                   >
                     <Text style={styles.timeLabel}>{label}</Text>
-                    <Pressable
-                      onPress={() => onToggle(k, !checked)}
-                      style={[
-                        styles.checkbox,
-                        checked
-                          ? {
-                              backgroundColor: config.color,
-                              borderColor: config.color,
-                            }
-                          : styles.checkboxUnchecked,
-                      ]}
-                    >
-                      {checked && <Check size={20} color="white" />}
-                    </Pressable>
+                    {!disabled && (
+                      <Pressable
+                        onPress={() => onToggle(k, !checked)}
+                        style={[
+                          styles.checkbox,
+                          checked
+                            ? {
+                                backgroundColor: config.color,
+                                borderColor: config.color,
+                              }
+                            : styles.checkboxUnchecked,
+                        ]}
+                      >
+                        {checked && <Check size={20} color="white" />}
+                      </Pressable>
+                    )}
                   </View>
                   {!isLast && <View style={styles.divider} />}
                 </View>
@@ -164,15 +172,17 @@ export default function MedicationCard({
           <Text style={styles.cardDesc}>{config.description}</Text>
         </View>
 
-        <Pressable
-          onPress={() => onToggle(key, !checked)}
-          style={[
-            styles.checkbox,
-            checked ? styles.checkboxChecked : styles.checkboxUnchecked,
-          ]}
-        >
-          {checked && <Check size={20} color="white" />}
-        </Pressable>
+        {!disabled && (
+          <Pressable
+            onPress={() => onToggle(key, !checked)}
+            style={[
+              styles.checkbox,
+              checked ? styles.checkboxChecked : styles.checkboxUnchecked,
+            ]}
+          >
+            {checked && <Check size={20} color="white" />}
+          </Pressable>
+        )}
       </View>
     )
   }
@@ -190,18 +200,20 @@ export default function MedicationCard({
             return (
               <View key={key} style={styles.multiRow}>
                 <Text style={styles.multiRowLabel}>{label}</Text>
-                <Pressable
-                  onPress={() => onToggle(key, !checked)}
-                  style={[
-                    styles.checkboxSmall,
-                    checked
-                      ? styles.checkboxSmallChecked
-                      : styles.checkboxUnchecked,
-                    { backgroundColor: checked ? "white" : "transparent" },
-                  ]}
-                >
-                  {checked && <Check size={16} color="black" />}
-                </Pressable>
+                {!disabled && (
+                  <Pressable
+                    onPress={() => onToggle(key, !checked)}
+                    style={[
+                      styles.checkboxSmall,
+                      checked
+                        ? styles.checkboxSmallChecked
+                        : styles.checkboxUnchecked,
+                      { backgroundColor: checked ? "white" : "transparent" },
+                    ]}
+                  >
+                    {checked && <Check size={16} color="black" />}
+                  </Pressable>
+                )}
               </View>
             )
           })}
@@ -314,20 +326,22 @@ export default function MedicationCard({
                   style={[styles.dailyRow, { paddingVertical: Spacing.xs }]}
                 >
                   <Text style={styles.timeLabel}>{label}</Text>
-                  <Pressable
-                    onPress={() => onToggle(k, !checked)}
-                    style={[
-                      styles.checkbox,
-                      checked
-                        ? {
-                            backgroundColor: config.color,
-                            borderColor: config.color,
-                          }
-                        : styles.checkboxUnchecked,
-                    ]}
-                  >
-                    {checked && <Check size={20} color="white" />}
-                  </Pressable>
+                  {!disabled && (
+                    <Pressable
+                      onPress={() => onToggle(k, !checked)}
+                      style={[
+                        styles.checkbox,
+                        checked
+                          ? {
+                              backgroundColor: config.color,
+                              borderColor: config.color,
+                            }
+                          : styles.checkboxUnchecked,
+                      ]}
+                    >
+                      {checked && <Check size={20} color="white" />}
+                    </Pressable>
+                  )}
                 </View>
                 {!isLast && <View style={styles.divider} />}
               </View>

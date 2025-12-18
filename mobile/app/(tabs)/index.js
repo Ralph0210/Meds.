@@ -159,6 +159,15 @@ export default function HomeScreen() {
       return true
     }) || []
 
+  // Check if date is in the future
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const selectedMidnight = new Date(selectedDate)
+  selectedMidnight.setHours(0, 0, 0, 0)
+
+  const isFuture = selectedMidnight.getTime() > today.getTime()
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
@@ -195,6 +204,7 @@ export default function HomeScreen() {
               key={med.id || index}
               config={med}
               record={recordData}
+              disabled={isFuture}
               onToggle={(key, val) => mutation.mutate({ key, value: val })}
             />
           ))
