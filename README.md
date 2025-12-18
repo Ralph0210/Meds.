@@ -1,23 +1,37 @@
-# Medication Tracker
+# Meds
 
-## How to Run
+A privacy-first medication tracking app for iOS.
 
-You can start the app using one of these commands in your terminal:
+## 🔒 Privacy First
 
-### Option 1: Python (Recommended, built-in)
+**Your data never leaves your device.**
+
+- All data stored locally via SQLite
+- No network calls, no cloud sync
+- No analytics or tracking
+- Complete deletion when you remove a medication
+
+## 📱 Features
+
+- Track daily medications with flexible schedules
+- Visual history with calendar view
+- Progress rings show daily completion
+- Dark mode optimized UI
+
+## 🛠️ Development
 
 ```bash
-python3 -m http.server 8000
+cd mobile
+npm install
+npx expo start
 ```
 
-Then open [http://localhost:8000](http://localhost:8000).
-
-### Option 2: Node.js
+## 🧪 Testing
 
 ```bash
-npx serve
+npm test
 ```
 
-### Option 3: Double-click script
+## 📄 License
 
-I have included a file named `start_app.command`. You can just double-click it in Finder to start the server.
+MIT License - see [LICENSE](LICENSE) for details.
