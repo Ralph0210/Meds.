@@ -13,16 +13,27 @@ export default function ProgressRing({
   const circum = 2 * Math.PI * r
 
   // -- Segmented Mode --
-  if (segments.length > 0) {
-    const total = segments.length
-    const gap = total > 1 ? 0.1 : 0 // Small gap between segments in radians (relative to circum? No, let's use Dasharray)
+  // If segments provided (even if empty, meaning no meds), render segments or empty track
+  if (Array.isArray(segments)) {
+    if (segments.length === 0) {
+      // Empty State: Just the track
+      return (
+        <Svg height={size} width={size} viewBox={`0 0 ${size} ${size}`}>
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="transparent"
+            stroke={Colors.surfaceLight} // Subtle gray
+            strokeOpacity={0.3}
+            strokeWidth={strokeWidth}
+          />
+        </Svg>
+      )
+    }
 
-    // Actually, dashed circles are easier.
-    // Each segment covers 1/total of the circle.
-    // We can just render ONE circle with strokeDasharray to create gaps?
-    // No, we need different colors. So we render 'total' circles, each rotated.
-    // Or 'total' Arcs. Arcs are cleaner but require PATH.
-    // Let's stick to rotated Circles with strokeDasharray for simplicity and smooth caps.
+    const total = segments.length
+    const gap = total > 1 ? 0.1 : 0
 
     // Arc length for one segment
     const arcLength = circum / total
@@ -36,18 +47,13 @@ export default function ProgressRing({
           const rotation = -90 + (360 / total) * i
           return (
             <G key={i} rotation={rotation} origin={`${size / 2}, ${size / 2}`}>
-              {/* Using a Circle for each segment. 
-                   strokeDasharray = [dashedPart, gapPart] 
-                   dashedPart = dashLength
-                   gapPart = circum - dashLength 
-               */}
               <Circle
                 cx={size / 2}
                 cy={size / 2}
                 r={r}
                 fill="transparent"
                 stroke={seg.color || color}
-                strokeOpacity={seg.completed ? 1 : 0.25} // Low opacity if not taken
+                strokeOpacity={seg.completed ? 1 : 0.25}
                 strokeWidth={strokeWidth}
                 strokeDasharray={`${dashLength} ${circum - dashLength}`}
                 strokeLinecap="round"

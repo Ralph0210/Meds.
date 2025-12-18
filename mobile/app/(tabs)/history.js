@@ -58,7 +58,69 @@ export default function HistoryScreen() {
     const rec = records?.[dateStr]?.data || {}
 
     const segments = []
+
+    // Day-specific timestamps for check
+    const dayTime = new Date(day)
+    dayTime.setHours(0, 0, 0, 0)
+
     config.forEach((med) => {
+      // 1. FILTERING LOGIC (Must match HomeScreen)
+      const medConfig = med.config || {}
+
+      // Check Start Date
+      if (medConfig.startDate) {
+        const [y, m, d] = medConfig.startDate.split("-").map(Number)
+        const start = new Date(y, m - 1, d)
+        start.setHours(0, 0, 0, 0)
+        if (dayTime.getTime() < start.getTime()) return
+      }
+
+      // Check Interval
+      if (med.type === "interval") {
+        const interval = parseInt(medConfig.intervalDays) || 1
+        if (interval > 1 && medConfig.startDate) {
+          const [y, m, d] = medConfig.startDate.split("-").map(Number)
+          const start = new Date(y, m - 1, d)
+          start.setHours(0, 0, 0, 0)
+          const diffTime = dayTime - start
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+          if (diffDays < 0 || diffDays % interval !== 0) return
+        }
+      }
+
+      // Check Cyclic
+      if (med.type === "cyclic") {
+        const cycle = parseInt(medConfig.cycleDays) || 28
+        const active = parseInt(medConfig.activeDays) || 21
+        if (medConfig.startDate) {
+          const [y, m, d] = medConfig.startDate.split("-").map(Number)
+          const start = new Date(y, m - 1, d)
+          start.setHours(0, 0, 0, 0)
+          const diffTime = dayTime - start
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+          if (diffDays < 0) return
+
+          const position = diffDays % cycle
+          if (position >= active) return
+        }
+      }
+
+      // Check Course Duration
+      if (med.type === "course") {
+        if (medConfig.durationMode === "days") {
+          const duration = parseInt(medConfig.courseDuration) || 1
+          if (medConfig.startDate) {
+            const [y, m, d] = medConfig.startDate.split("-").map(Number)
+            const start = new Date(y, m - 1, d)
+            start.setHours(0, 0, 0, 0)
+            const diffTime = dayTime - start
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+            if (diffDays < 0 || diffDays >= duration) return
+          }
+        }
+      }
+
+      // 2. Add Segments
       med.keys.forEach((key) => {
         segments.push({
           color: med.color || Colors.primary,

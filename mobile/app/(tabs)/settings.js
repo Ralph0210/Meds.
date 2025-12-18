@@ -19,6 +19,7 @@ import {
 } from "../../lib/db"
 import { Plus, ChevronRight } from "lucide-react-native"
 import { Colors, Spacing, Layout, Typography } from "../../theme"
+import { ICONS } from "../../theme/icons"
 import EditMedicationModal from "../../components/EditMedicationModal"
 
 export default function SettingsScreen() {
@@ -94,22 +95,24 @@ export default function SettingsScreen() {
 
       <ScrollView style={styles.content}>
         {isLoading && <ActivityIndicator color={Colors.primary} />}
-
         {meds?.map((med, index) => (
           <TouchableOpacity
             key={med.id || index}
             style={styles.item}
             onPress={() => handleEdit(med)}
           >
-            <View style={[styles.iconBox, { backgroundColor: Colors.white10 }]}>
-              <Text
-                style={[
-                  styles.iconText,
-                  { color: med.color || Colors.primary },
-                ]}
-              >
-                {med.icon || (med.name ? med.name[0] : "?")}
-              </Text>
+            <View
+              style={[
+                styles.iconBox,
+                { backgroundColor: `${med.color || Colors.primary}20` },
+              ]}
+            >
+              {(() => {
+                const IconComp = ICONS[med.icon] || ICONS.Pill
+                return (
+                  <IconComp size={24} color={med.color || Colors.primary} />
+                )
+              })()}
             </View>
             <View style={styles.itemInfo}>
               <Text style={styles.itemName}>
@@ -120,12 +123,10 @@ export default function SettingsScreen() {
             <ChevronRight color={Colors.textTertiary} size={20} />
           </TouchableOpacity>
         ))}
-
         <TouchableOpacity style={styles.addBtn} onPress={handleNewLine}>
           <Plus color={Colors.textOnPrimary} size={24} />
           <Text style={styles.addBtnText}>Add Medication</Text>
         </TouchableOpacity>
-
         <TouchableOpacity
           style={[
             styles.deleteBtn,
@@ -158,7 +159,6 @@ export default function SettingsScreen() {
             Reset All Data (Dev)
           </Text>
         </TouchableOpacity>
-
         <View style={{ height: 100 }} />
       </ScrollView>
 

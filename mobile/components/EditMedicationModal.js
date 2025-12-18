@@ -15,24 +15,7 @@ import { Colors, Spacing, Layout, Typography } from "../theme"
 import { ICONS, ICON_KEYS } from "../theme/icons"
 import Dropdown from "./Dropdown"
 
-const SUPPORTED_COLORS = [
-  "#FF6B6B",
-  "#4ECDC4",
-  "#45B7D1",
-  "#96CEB4",
-  "#FFEEAD",
-  "#D4A5A5",
-  "#9B59B6",
-  "#3498DB",
-  "#1ABC9C",
-  "#F1C40F",
-]
-
-const MEDICATION_TYPES = [
-  { id: "daily", label: "Every day", desc: "Take everyday" },
-  { id: "course", label: "For a set period", desc: "Limited duration" },
-  { id: "cyclic", label: "On and off", desc: "On/Off cycles" },
-]
+import { useMedicationForm } from "../hooks/useMedicationForm"
 
 export default function EditMedicationModal({
   visible,
@@ -41,61 +24,18 @@ export default function EditMedicationModal({
   onSave,
   onDelete,
 }) {
-  const isNew = !medication?.id
-
-  const [form, setForm] = useState({
-    name: "",
-    dosageQuantity: "",
-    dosageUnit: "pill",
-    type: "daily",
-    frequency: "1x Daily", // For Daily
-    times: ["Morning"], // For Daily
-    config: {}, // For other types
-    color: SUPPORTED_COLORS[0],
-    icon: ICON_KEYS[0],
-  })
-
-  useEffect(() => {
-    if (medication) {
-      setForm({
-        name: medication.name || "",
-        dosageQuantity: medication.dosage
-          ? medication.dosage.replace(/[a-zA-Z\s]/g, "")
-          : "",
-        dosageUnit:
-          medication.dosage && medication.dosage.includes("mg")
-            ? "mg"
-            : medication.dosage && medication.dosage.includes("ml")
-              ? "ml"
-              : "pill",
-        type: medication.type || "daily",
-        frequency: medication.frequency || "1x Daily",
-        times: medication.times || ["Morning"],
-        config: medication.config || {},
-        color: medication.color || SUPPORTED_COLORS[0],
-        icon: medication.icon || ICON_KEYS[0],
-      })
-    } else {
-      setForm({
-        name: "",
-        dosageQuantity: "",
-        dosageUnit: "pill",
-        type: "daily",
-        frequency: "1x Daily",
-        times: ["Morning"],
-        config: {},
-        color: SUPPORTED_COLORS[0],
-        icon: ICON_KEYS[0],
-      })
-    }
-  }, [medication])
+  const {
+    form,
+    setForm,
+    isNew,
+    updateConfig,
+    getFinalDosage,
+    SUPPORTED_COLORS,
+  } = useMedicationForm(medication)
 
   const handleSave = () => {
     if (!form.name) return
-    const finalDosage = form.dosageQuantity
-      ? `${form.dosageQuantity}${form.dosageUnit === "pill" ? "" : form.dosageUnit}`
-      : ""
-    onSave({ ...medication, ...form, dosage: finalDosage })
+    onSave({ ...medication, ...form, dosage: getFinalDosage() })
   }
 
   const handleDelete = () => {
@@ -109,272 +49,9 @@ export default function EditMedicationModal({
     ])
   }
 
-  const updateConfig = (key, value) => {
-    setForm((prev) => ({
-      ...prev,
-      config: { ...prev.config, [key]: value },
-    }))
-  }
-
   // --- Renderers for Type-Specific Forms ---
 
-  const renderScheduleForm = () => {
-    const handleFrequencyChange = (freq) => {
-      let newTimes = []
-      if (freq === "1x Daily") newTimes = ["Morning"]
-      else if (freq === "2x Daily") newTimes = ["Morning", "Night"]
-      else if (freq === "3x Daily") newTimes = ["Morning", "Noon", "Night"]
-      else if (freq === "Custom") newTimes = [...form.times]
-
-      setForm((prev) => ({ ...prev, frequency: freq, times: newTimes }))
-    }
-
-    const { type } = form
-    // Determine units for the limit dropdown: "days" vs. the dosage unit (e.g. "pill", "mg")
-    const limitUnitOptions = [form.dosageUnit || "pill", "days"]
-
-    // Helper to get current limit mode from config, or default to quantity (dosageUnit)
-    const currentLimitMode =
-      form.config.durationMode === "days" ? "days" : "quantity"
-
-    // Helper to switch mode
-    const setLimitMode = (mode) => {
-      // mode is either "days" or "quantity"
-      // We map the dropdown selection back to these internal keys
-      updateConfig("durationMode", mode)
-    }
-
-    return (
-      <View style={styles.subForm}>
-        {/* Course Limit Row - Only for Course */}
-        {type === "course" && (
-          <View style={{ marginBottom: Spacing.xl }}>
-            <Text style={styles.label}>Duration</Text>
-            <View style={{ flexDirection: "row", gap: Spacing.sm, zIndex: 20 }}>
-              <View style={{ flex: 1 }}>
-                <TextInput
-                  style={styles.input}
-                  placeholder={
-                    currentLimitMode === "days" ? "e.g. 10" : "e.g. 30"
-                  }
-                  keyboardType="numeric"
-                  placeholderTextColor={Colors.textTertiary}
-                  value={form.config.courseDuration}
-                  onChangeText={(t) => updateConfig("courseDuration", t)}
-                />
-              </View>
-              <Dropdown
-                value={
-                  currentLimitMode === "days"
-                    ? "days"
-                    : form.dosageUnit || "pill"
-                }
-                options={limitUnitOptions}
-                onChange={(val) => {
-                  if (val === "days") setLimitMode("days")
-                  else setLimitMode("quantity")
-                }}
-                width={110}
-              />
-            </View>
-
-            {/* Start Date also needs to be here if it's a course */}
-            <View style={{ marginTop: Spacing.md }}>
-              <Text style={styles.label}>Start Date</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={Colors.textTertiary}
-                value={
-                  form.config.startDate ||
-                  new Date().toISOString().split("T")[0]
-                }
-                onChangeText={(t) => updateConfig("startDate", t)}
-              />
-            </View>
-          </View>
-        )}
-
-        {/* Quick Presets */}
-        <View style={styles.optionsRow}>
-          {["1x Daily", "2x Daily", "3x Daily", "Custom"].map((opt) => (
-            <TouchableOpacity
-              key={opt}
-              style={[
-                styles.optionBtn,
-                form.frequency === opt && styles.optionBtnActive,
-              ]}
-              onPress={() => handleFrequencyChange(opt)}
-            >
-              <Text
-                style={[
-                  styles.optionText,
-                  form.frequency === opt && styles.optionTextActive,
-                ]}
-              >
-                {opt.replace(" Daily", "")}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Slots Editor */}
-        {/* Slots Editor */}
-        <View style={{ marginTop: Spacing.md, gap: Spacing.sm }}>
-          {form.times.map((time, index) => {
-            // Parse time for split inputs
-            let timeValue = ""
-            let timePeriod = "AM"
-
-            const presets = [
-              "Morning",
-              "Noon",
-              "After Meal",
-              "Evening",
-              "Night",
-            ]
-
-            if (presets.includes(time)) {
-              timePeriod = time
-            } else {
-              // Try to split "8:00 AM" -> val="8:00", unit="AM"
-              // If no space, default to AM
-              const parts = time.split(" ")
-              if (
-                parts.length > 1 &&
-                ["AM", "PM"].includes(parts[parts.length - 1])
-              ) {
-                timePeriod = parts.pop()
-                timeValue = parts.join(" ")
-              } else {
-                timeValue = time
-              }
-            }
-
-            const updateTime = (val, period) => {
-              let newTimeStr = ""
-              if (presets.includes(period)) {
-                newTimeStr = period
-              } else {
-                newTimeStr = val ? `${val} ${period}` : period
-              }
-
-              const newTimes = [...form.times]
-              newTimes[index] = newTimeStr
-              // FIXED: Do not force frequency to "Custom" when just editing a time slot
-              setForm({ ...form, times: newTimes })
-            }
-
-            // If it's a preset/named period (not AM/PM), we hide the numeric input
-            // and let the dropdown take full width.
-            const isPreset = presets.includes(timePeriod)
-
-            return (
-              <View
-                key={index}
-                style={[styles.timeSlotRow, { zIndex: 100 - index }]}
-              >
-                {/* Only show numeric input for AM/PM */}
-                {!isPreset && (
-                  <View style={{ flex: 1 }}>
-                    <TextInput
-                      style={styles.input}
-                      value={timeValue}
-                      placeholder="00:00"
-                      placeholderTextColor={Colors.textTertiary}
-                      onChangeText={(text) => updateTime(text, timePeriod)}
-                    />
-                  </View>
-                )}
-
-                <View style={isPreset ? { flex: 1 } : { width: 110 }}>
-                  <Dropdown
-                    value={timePeriod}
-                    options={["AM", "PM", ...presets]}
-                    onChange={(period) => {
-                      let newVal = timeValue
-
-                      if (presets.includes(period)) {
-                        newVal = ""
-                      } else if (!timeValue && ["AM", "PM"].includes(period)) {
-                        // Default to current time
-                        const now = new Date()
-                        let h = now.getHours()
-                        const m = now.getMinutes().toString().padStart(2, "0")
-                        if (h > 12) h -= 12
-                        if (h === 0) h = 12
-                        newVal = `${h}:${m}`
-                      }
-
-                      updateTime(newVal, period)
-                    }}
-                    width={isPreset ? "100%" : 110}
-                  />
-                </View>
-
-                {form.times.length > 1 && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      const newTimes = form.times.filter((_, i) => i !== index)
-                      setForm({ ...form, times: newTimes, frequency: "Custom" })
-                    }}
-                    style={styles.removeSlotBtn}
-                  >
-                    <X size={16} color={Colors.textSecondary} />
-                  </TouchableOpacity>
-                )}
-              </View>
-            )
-          })}
-
-          {form.frequency === "Custom" && (
-            <TouchableOpacity
-              style={styles.addSlotBtn}
-              onPress={() => {
-                setForm({
-                  ...form,
-                  times: [...form.times, "8:00 AM"], // Default new slot
-                  frequency: "Custom",
-                })
-              }}
-            >
-              <Text style={styles.addSlotText}>+ Add Time</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    )
-  }
-
-  const renderCyclicForm = () => (
-    <View style={styles.subForm}>
-      <Text style={styles.sectionHeader}>Cycle Settings</Text>
-      <View style={{ flexDirection: "row", gap: Spacing.md }}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>Cycle Length (Days)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="28"
-            keyboardType="numeric"
-            placeholderTextColor={Colors.textTertiary}
-            value={form.config.cycleDays}
-            onChangeText={(t) => updateConfig("cycleDays", t)}
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>Active Days</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="21"
-            keyboardType="numeric"
-            placeholderTextColor={Colors.textTertiary}
-            value={form.config.activeDays}
-            onChangeText={(t) => updateConfig("activeDays", t)}
-          />
-        </View>
-      </View>
-    </View>
-  )
+  // --- Renderers for Type-Specific Forms ---
 
   const renderIntervalForm = () => (
     <View style={styles.subForm}>
@@ -422,8 +99,7 @@ export default function EditMedicationModal({
         </View>
 
         <ScrollView style={styles.modalContent}>
-          {/* Name & Dosage */}
-          {/* Name & Dosage */}
+          {/* 1. Name */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>Name</Text>
             <TextInput
@@ -435,10 +111,10 @@ export default function EditMedicationModal({
             />
           </View>
 
-          <View style={[styles.formGroup, { marginBottom: Spacing.xxl }]}>
-            <Text style={styles.label}>Amount</Text>
+          {/* 2. Amount (Take [1 pill]) */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Take</Text>
             <View style={{ flexDirection: "row", gap: Spacing.sm, zIndex: 10 }}>
-              {/* Quantity Input */}
               <View style={{ flex: 1 }}>
                 <TextInput
                   style={styles.input}
@@ -446,10 +122,9 @@ export default function EditMedicationModal({
                   placeholderTextColor={Colors.textTertiary}
                   value={form.dosageQuantity}
                   onChangeText={(t) => setForm({ ...form, dosageQuantity: t })}
-                  keyboardType="default" // Changed to default to allow "/"
+                  keyboardType="default"
                 />
               </View>
-
               <Dropdown
                 value={form.dosageUnit}
                 options={["pill", "mg", "ml"]}
@@ -457,7 +132,6 @@ export default function EditMedicationModal({
                 width={100}
               />
             </View>
-
             {/* Quick Chips */}
             <ScrollView
               horizontal
@@ -470,7 +144,6 @@ export default function EditMedicationModal({
                 : ["5", "10", "20", "50", "100", "200", "500", "1000"]
               ).map((val) => {
                 const isSelected = form.dosageQuantity === val
-
                 return (
                   <TouchableOpacity
                     key={val}
@@ -491,45 +164,383 @@ export default function EditMedicationModal({
             </ScrollView>
           </View>
 
-          {/* Tracking Type Selector */}
-          <View style={[styles.formGroup, { marginBottom: Spacing.md }]}>
-            <Text style={styles.label}>Frequency</Text>
-            <Dropdown
-              value={MEDICATION_TYPES.find((t) => t.id === form.type)?.label}
-              options={MEDICATION_TYPES.map((t) => t.label)}
-              onChange={(label) => {
-                const selected = MEDICATION_TYPES.find((t) => t.label === label)
-                if (selected) setForm({ ...form, type: selected.id })
+          {/* 3. Frequency & Schedule Group */}
+          <View style={[styles.formGroup, { zIndex: 9 }]}>
+            {/* Frequency and Times - Side by Side Row */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: Spacing.md,
               }}
-              width="100%"
-            />
+            >
+              {/* Left Column: Frequency Dropdown */}
+              <View style={{ flex: 1.2 }}>
+                <Text style={styles.label}>Frequency</Text>
+                <Dropdown
+                  value={
+                    form.type === "cyclic"
+                      ? "On and off (Cyclic)"
+                      : form.type === "interval"
+                        ? "Every X Days"
+                        : form.frequency === "1x Daily"
+                          ? "Once a day"
+                          : form.frequency === "2x Daily"
+                            ? "Twice a day"
+                            : form.frequency === "3x Daily"
+                              ? "3 times a day"
+                              : "Custom Schedule"
+                  }
+                  options={[
+                    "Once a day",
+                    "Twice a day",
+                    "3 times a day",
+                    "Custom Schedule",
+                    "On and off (Cyclic)",
+                  ]}
+                  onChange={(label) => {
+                    if (label === "On and off (Cyclic)") {
+                      setForm({ ...form, type: "cyclic" })
+                    } else {
+                      const newType =
+                        form.type === "cyclic" || form.type === "interval"
+                          ? "daily"
+                          : form.type
+
+                      let freq = "Custom"
+                      let times = [...form.times]
+
+                      if (label === "Once a day") {
+                        freq = "1x Daily"
+                        times = ["Morning"]
+                      } else if (label === "Twice a day") {
+                        freq = "2x Daily"
+                        times = ["Morning", "Night"]
+                      } else if (label === "3 times a day") {
+                        freq = "3x Daily"
+                        times = ["Morning", "Noon", "Night"]
+                      }
+
+                      setForm({
+                        ...form,
+                        type: newType,
+                        frequency: freq,
+                        times,
+                      })
+                    }
+                  }}
+                  width="100%"
+                />
+              </View>
+
+              {/* Right Column: Time Slots */}
+              {(form.type === "daily" || form.type === "course") && (
+                <View style={{ flex: 1, marginTop: 24 }}>
+                  {/* marginTop 24 aligns with Label height (~20) + small margin to align with Input top */}
+                  {form.times.map((time, index) => {
+                    let timeValue = ""
+                    let timePeriod = "AM"
+                    const presets = [
+                      "Morning",
+                      "Noon",
+                      "Evening",
+                      "Night",
+                      "Before Meal",
+                      "After Meal",
+                    ]
+                    if (presets.includes(time)) {
+                      timePeriod = time
+                    } else {
+                      const parts = time.split(" ")
+                      if (
+                        parts.length > 1 &&
+                        ["AM", "PM"].includes(parts[parts.length - 1])
+                      ) {
+                        timePeriod = parts.pop()
+                        timeValue = parts.join(" ")
+                      } else {
+                        timeValue = time
+                      }
+                    }
+
+                    const updateTime = (val, period) => {
+                      const newTimeStr = presets.includes(period)
+                        ? period
+                        : val
+                          ? `${val} ${period}`
+                          : period
+                      const newTimes = [...form.times]
+                      newTimes[index] = newTimeStr
+                      setForm({ ...form, times: newTimes })
+                    }
+                    const isPreset = presets.includes(timePeriod)
+
+                    return (
+                      <View
+                        key={index}
+                        style={[
+                          styles.timeSlotRow,
+                          { zIndex: 50 - index, marginBottom: Spacing.sm },
+                        ]}
+                      >
+                        {!isPreset && (
+                          <View style={{ flex: 1 }}>
+                            <TextInput
+                              style={[styles.input, { paddingHorizontal: 8 }]} // Compact padding
+                              value={timeValue}
+                              placeholder="00:00"
+                              placeholderTextColor={Colors.textTertiary}
+                              onChangeText={(text) =>
+                                updateTime(text, timePeriod)
+                              }
+                            />
+                          </View>
+                        )}
+                        <View
+                          style={{
+                            flex: isPreset ? 1 : 0,
+                            width: isPreset ? "auto" : 70,
+                          }}
+                        >
+                          <Dropdown
+                            value={timePeriod}
+                            options={presets}
+                            onChange={(period) => {
+                              let newVal = timeValue
+                              if (presets.includes(period)) newVal = ""
+                              updateTime(newVal, period)
+                            }}
+                            width="100%"
+                          />
+                        </View>
+                        {form.times.length > 1 && (
+                          <TouchableOpacity
+                            onPress={() => {
+                              const newTimes = form.times.filter(
+                                (_, i) => i !== index
+                              )
+
+                              let newFreq = "Custom"
+                              if (
+                                newTimes.length === 1 &&
+                                newTimes[0] === "Morning"
+                              ) {
+                                newFreq = "1x Daily"
+                              } else if (
+                                newTimes.length === 2 &&
+                                newTimes.includes("Morning") &&
+                                newTimes.includes("Night")
+                              ) {
+                                newFreq = "2x Daily"
+                              } else if (
+                                newTimes.length === 3 &&
+                                newTimes.includes("Morning") &&
+                                newTimes.includes("Noon") &&
+                                newTimes.includes("Night")
+                              ) {
+                                newFreq = "3x Daily"
+                              }
+
+                              setForm({
+                                ...form,
+                                times: newTimes,
+                                frequency: newFreq,
+                              })
+                            }}
+                            style={{ padding: 4 }}
+                          >
+                            <X size={14} color={Colors.textSecondary} />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    )
+                  })}
+                  {form.frequency === "Custom" && (
+                    <TouchableOpacity
+                      style={[styles.addSlotBtn, { padding: 8, marginTop: 0 }]}
+                      onPress={() => {
+                        setForm({
+                          ...form,
+                          times: [...form.times, "8:00 AM"],
+                          frequency: "Custom",
+                        })
+                      }}
+                    >
+                      <Text style={[styles.addSlotText, { fontSize: 12 }]}>
+                        + Add
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+            </View>
+
+            {/* Set Duration Toggle - Full Width below row */}
+            <View style={{ marginTop: Spacing.sm }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: form.type === "course" ? Spacing.sm : 0,
+                }}
+              >
+                <Text style={[styles.label, { marginBottom: 0 }]}>
+                  Set Duration
+                </Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    setForm({
+                      ...form,
+                      type: form.type === "course" ? "daily" : "course",
+                    })
+                  }
+                  style={{
+                    width: 40,
+                    height: 24,
+                    borderRadius: 12,
+                    backgroundColor:
+                      form.type === "course" ? Colors.primary : Colors.black20,
+                    padding: 2,
+                    alignItems:
+                      form.type === "course" ? "flex-end" : "flex-start",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: "white",
+                    }}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {form.type === "course" && (
+                <View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: Spacing.sm,
+                      zIndex: 20,
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder={
+                          form.config.durationMode === "quantity"
+                            ? "e.g. 30"
+                            : "e.g. 10"
+                        }
+                        keyboardType="numeric"
+                        placeholderTextColor={Colors.textTertiary}
+                        value={form.config.courseDuration}
+                        onChangeText={(t) => updateConfig("courseDuration", t)}
+                      />
+                    </View>
+                    <Dropdown
+                      value={
+                        form.config.durationMode === "quantity"
+                          ? form.dosageUnit || "pill"
+                          : "days"
+                      }
+                      options={[form.dosageUnit || "pill", "days"]}
+                      onChange={(val) =>
+                        updateConfig(
+                          "durationMode",
+                          val === "days" ? "days" : "quantity"
+                        )
+                      }
+                      width={110}
+                    />
+                  </View>
+                  <View style={{ marginTop: Spacing.md }}>
+                    <Text style={styles.label}>Start Date</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor={Colors.textTertiary}
+                      value={
+                        form.config.startDate ||
+                        new Date().toLocaleDateString("en-CA")
+                      }
+                      onChangeText={(t) => updateConfig("startDate", t)}
+                    />
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* Cyclic Form - Nested here if selected */}
+            {form.type === "cyclic" && (
+              <View style={{ marginTop: Spacing.md }}>
+                <View style={{ flexDirection: "row", gap: Spacing.md }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.label}>Cycle Length (Days)</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="28"
+                      keyboardType="numeric"
+                      placeholderTextColor={Colors.textTertiary}
+                      value={form.config.cycleDays}
+                      onChangeText={(t) => updateConfig("cycleDays", t)}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.label}>Active Days</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="21"
+                      keyboardType="numeric"
+                      placeholderTextColor={Colors.textTertiary}
+                      value={form.config.activeDays}
+                      onChangeText={(t) => updateConfig("activeDays", t)}
+                    />
+                  </View>
+                </View>
+              </View>
+            )}
           </View>
 
-          {/* Conditional Sub-Forms */}
-          {/* Daily Schedule is used for both Daily and Course types */}
-          {(form.type === "daily" || form.type === "course") &&
-            renderScheduleForm()}
-
-          {form.type === "cyclic" && renderCyclicForm()}
-          {form.type === "interval" && renderIntervalForm()}
-
-          {/* Color Picker */}
+          {/* Color/Icon */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>Color Tag</Text>
             <View style={styles.colorGrid}>
-              {SUPPORTED_COLORS.map((c) => (
-                <TouchableOpacity
-                  key={c}
-                  style={[styles.colorCell, { backgroundColor: c }]}
-                  onPress={() => setForm({ ...form, color: c })}
-                >
-                  {form.color === c && <Check color="white" size={16} />}
-                </TouchableOpacity>
-              ))}
+              {SUPPORTED_COLORS.map((c) => {
+                const isSelected = form.color === c
+                return (
+                  <TouchableOpacity
+                    key={c}
+                    style={[
+                      styles.colorCell,
+                      isSelected && {
+                        borderWidth: 2,
+                        borderColor: Colors.primary,
+                        backgroundColor: "transparent",
+                        padding: 3, // Creates the gap
+                      },
+                      !isSelected && { backgroundColor: c },
+                    ]}
+                    onPress={() => setForm({ ...form, color: c })}
+                  >
+                    {isSelected && (
+                      <View
+                        style={{
+                          flex: 1,
+                          width: "100%",
+                          borderRadius: 999,
+                          backgroundColor: c,
+                        }}
+                      />
+                    )}
+                  </TouchableOpacity>
+                )
+              })}
             </View>
           </View>
 
-          {/* Icon Picker (Lucide) */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>Icon</Text>
             <View style={styles.iconGrid}>
@@ -552,7 +563,6 @@ export default function EditMedicationModal({
             </View>
           </View>
 
-          {/* Action Buttons */}
           <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
             <Text style={styles.saveBtnText}>Save Medication</Text>
           </TouchableOpacity>
@@ -601,9 +611,10 @@ const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
     padding: Spacing.xl,
+    paddingTop: Spacing.xxl, // Extra top breathing room
   },
   formGroup: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xxl,
   },
   subForm: {
     backgroundColor: Colors.surfaceHighlight,

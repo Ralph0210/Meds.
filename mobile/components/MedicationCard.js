@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Pressable,
-  StyleSheet,
-} from "react-native"
+import { View, Text, Pressable, StyleSheet } from "react-native"
 import { Check } from "lucide-react-native"
 
 import { LinearGradient } from "expo-linear-gradient"
@@ -17,19 +11,27 @@ export default function MedicationCard({
   onViewDate,
   onToggle,
 }) {
-  // config: { id, name, description, type, color, bg_color, icon, ... }
+  // config: { id, name, description, type, color, bg_color, icon, config: {...}, ... }
   // record: { data: { "key1": true, "key2": false } } (or null)
 
   const isCompleted = (key) => record?.data?.[key] === true
 
+  // Helper for dosage text
+  const getDosageText = () => {
+    if (config.dosage) return config.dosage
+    const qty = config.dosageQuantity || ""
+    const unit = config.dosageUnit || "pills" // Default to pills if missing
+    if (!qty && !unit) return ""
+    return `${qty} ${unit}`.trim()
+  }
+
   // Wrapper Component for consistent styles
   const CardWrapper = ({ children }) => {
     // Create a gradient from background color
-    // We'll trust the bg_color but if it's missing use a default
     const bg = config.bg_color || "#1e1f25"
     return (
       <LinearGradient
-        colors={[bg, adjustColor(bg, 20)]}
+        colors={[bg, adjustColor(bg)]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[
@@ -45,18 +47,10 @@ export default function MedicationCard({
     )
   }
 
-  // ... (Keep Renderers Logic same, but update their styles slightly if needed)
-
-  // Re-define renderers to use cleaner styles?
-  // For now let's just keep the logic but wrap the return.
-
   /* New Clean Daily Renderer */
   const DailyRenderer = () => {
-    // Determine if we have multiple slots to render or just one
-    // Ideally we iterate over config.keys if they map to times
     const hasMultiple = config.keys?.length > 1
 
-    // Helper to render a single row
     const renderRow = (infoKey, label, showHeader = false) => {
       const checked = isCompleted(infoKey)
 
@@ -74,8 +68,7 @@ export default function MedicationCard({
               >
                 <Text style={styles.cardTitle}>{config.name}</Text>
                 <Text style={styles.cardDesc}>
-                  {config.dosage ||
-                    `${config.dosageQuantity || ""} ${config.dosageUnit || ""}`}
+                  {getDosageText()}
                   {label ? ` • ${label}` : ""}
                 </Text>
               </View>
@@ -97,7 +90,6 @@ export default function MedicationCard({
               {checked && <Check size={20} color="white" />}
             </Pressable>
           </View>
-          {/* Single dose doesn't need divider usually, but if we wanted logic here it is */}
         </View>
       )
     }
@@ -113,14 +105,10 @@ export default function MedicationCard({
             }}
           >
             <Text style={styles.cardTitle}>{config.name}</Text>
-            <Text style={styles.cardDesc}>
-              {config.dosage ||
-                `${config.dosageQuantity || ""} ${config.dosageUnit || ""}`}
-            </Text>
+            <Text style={styles.cardDesc}>{getDosageText()}</Text>
           </View>
           <View>
             {config.keys.map((k, i) => {
-              // Fallback logic for label
               const label =
                 config.times?.[i] || config.schedule?.[i] || `Dose ${i + 1}`
               const checked = isCompleted(k)
@@ -158,12 +146,10 @@ export default function MedicationCard({
 
     // Single Case
     const singleKey = config.keys?.[0]
-    // Label can be specific time or frequency
     const singleLabel = config.times?.[0] || config.frequency
     return renderRow(singleKey, singleLabel, true)
   }
 
-  // Legacy Renderer references...
   const SimpleRenderer = () => {
     const key = config.keys?.[0]
     const checked = isCompleted(key)
@@ -223,19 +209,16 @@ export default function MedicationCard({
 
   /* Course Renderer with Progress */
   const CourseRenderer = () => {
-    // 1. Calculate Time-Based Baseline
-    // We must manually parse YYYY-MM-DD to ensure it's treated as LOCAL midnight,
-    // not UTC converted to local (which shifts back a day in western TZs).
+    const medConfig = config.config || {}
 
-    // Default to today if missing
+    // 1. Calculate Time-Based Baseline
     let start = new Date()
     start.setHours(0, 0, 0, 0)
 
-    if (config.startDate) {
-      const [y, m, d] = config.startDate.split("-").map(Number)
-      // Note: Months are 0-indexed in Date constructor
+    if (medConfig.startDate) {
+      const [y, m, d] = medConfig.startDate.split("-").map(Number)
       start = new Date(y, m - 1, d)
-      start.setHours(0, 0, 0, 0) // Redundant but safe
+      start.setHours(0, 0, 0, 0)
     }
 
     const now = new Date()
@@ -248,32 +231,34 @@ export default function MedicationCard({
     // 2. Determine Progress & Badge Text
     let valCurrent, valTotal, labelText, progress
 
-    if (config.durationMode === "quantity") {
+    if (medConfig.durationMode === "quantity") {
       const unit = config.dosageUnit || "pills"
-      valTotal = parseInt(config.courseDuration) || 1
+      valTotal = parseInt(medConfig.courseDuration) || 1
 
-      // Estimate taken: (Past Days * Doses/Day) + (Today's Actual Checks)
-      const dosesPerDay = config.keys?.length || 1 // keys is array of schedule UUIDs
+      const dosesPerDay = config.keys?.length || 1
+
+      // Calculate past doses accurately
+      let pastDoses = 0
+      if (daysPassed > 0) {
+        pastDoses = daysPassed * dosesPerDay
+      }
+
+      // Get today's completion count
       const takenToday =
         config.keys?.reduce((acc, k) => acc + (isCompleted(k) ? 1 : 0), 0) || 0
 
-      // If daysPassed < 0 (startDate in future), valCurrent = 0
-      const pastDoses = Math.max(daysPassed, 0) * dosesPerDay
       valCurrent = pastDoses + takenToday
 
       // Clamp visuals
       progress = Math.min(valCurrent / valTotal, 1)
 
-      // "Pill 0 of 20" or "Pill 5 of 20"
-      // Capitalize Unit
       const Unit = unit.charAt(0).toUpperCase() + unit.slice(1)
       labelText = `${Unit} ${valCurrent} of ${valTotal}`
     } else {
       // Days Mode
-      valTotal = parseInt(config.courseDuration) || 1
+      valTotal = parseInt(medConfig.courseDuration) || 1
       valCurrent = currentDay
 
-      // Progress for days: use daysPassed (completed days)
       progress = Math.min(Math.max(daysPassed / valTotal, 0), 1)
 
       labelText = `Day ${valCurrent} of ${valTotal}`
@@ -281,7 +266,6 @@ export default function MedicationCard({
 
     return (
       <View>
-        {/* Header Section with Progress */}
         <View style={{ marginBottom: Spacing.md }}>
           <View
             style={{
@@ -293,17 +277,13 @@ export default function MedicationCard({
           >
             <View>
               <Text style={styles.cardTitle}>{config.name}</Text>
-              <Text style={styles.cardDesc}>
-                {config.dosage ||
-                  `${config.dosageQuantity || ""} ${config.dosageUnit || ""}`}
-              </Text>
+              <Text style={styles.cardDesc}>{getDosageText()}</Text>
             </View>
             <View style={styles.courseBadge}>
               <Text style={styles.courseBadgeText}>{labelText}</Text>
             </View>
           </View>
 
-          {/* Progress Bar */}
           <View style={styles.progressBarBg}>
             <View
               style={[
@@ -314,7 +294,6 @@ export default function MedicationCard({
           </View>
         </View>
 
-        {/* Schedule List (Same as Daily) */}
         <View style={{ gap: Spacing.md }}>
           {(!config.keys || config.keys.length === 0) && (
             <Text style={{ color: Colors.textSecondary }}>No schedule set</Text>
@@ -360,13 +339,9 @@ export default function MedicationCard({
     <CardWrapper>
       <View style={styles.contentRow}>
         <View
-          style={[
-            styles.iconBox,
-            { backgroundColor: `${config.color}20` }, // 20% opacity using hex alpha
-          ]}
+          style={[styles.iconBox, { backgroundColor: `${config.color}20` }]}
         >
           {(() => {
-            // Handle legacy emoji or new keys
             const IconComponent = ICONS[config.icon] || ICONS.Pill
             return <IconComponent size={24} color={config.color} />
           })()}
@@ -379,7 +354,6 @@ export default function MedicationCard({
           {config.type === "multi" && <MultiRenderer />}
           {config.type === "course" && <CourseRenderer />}
 
-          {/* Fallback for new types */}
           {!["simple", "daily", "multi", "course"].includes(config.type) && (
             <View style={styles.rendererContainer}>
               <View>
@@ -396,13 +370,7 @@ export default function MedicationCard({
   )
 }
 
-// Helper to slightly vary the gradient
 function adjustColor(color) {
-  // Since we don't have a color manipulation library,
-  // we will return the same color. The LinearGradient will still
-  // do a subtle shift if we used different opacity, but here
-  // we rely on the border and natural lighting of the UI.
-  // Ideally, this would darken or lighten the color.
   return color
 }
 
@@ -496,28 +464,6 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "rgba(255,255,255,0.5)",
   },
-  courseButton: {
-    padding: Spacing.md,
-    borderRadius: Layout.radius.md,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.sm,
-  },
-  courseButtonChecked: {
-    backgroundColor: "rgba(255,255,255,0.9)",
-  },
-  courseButtonUnchecked: {
-    backgroundColor: Colors.black20,
-  },
-  courseTextChecked: {
-    color: "black",
-    fontWeight: "bold",
-  },
-  courseTextUnchecked: {
-    color: Colors.textPrimary,
-    fontWeight: "500",
-  },
   dailyRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -526,22 +472,6 @@ const styles = StyleSheet.create({
   timeLabel: {
     color: Colors.textPrimary,
     fontSize: Typography.subtitle.fontSize,
-    fontWeight: "600",
-  },
-  dailyChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: Layout.radius.full,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
-  },
-  dailyChipLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.caption.fontSize,
     fontWeight: "600",
   },
   courseBadge: {

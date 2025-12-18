@@ -8,7 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "storybook-generate": "sb-rn-get-stories"
+    "storybook-generate": "sb-rn-get-stories",
+    "test": "jest"
   },
   "dependencies": {
     "@babel/core": "^7.28.5",
@@ -49,7 +50,11 @@
   },
   "private": true,
   "devDependencies": {
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
     "babel-preset-expo": "~54.0.0",
+    "jest": "^30.2.0",
+    "jest-expo": "^54.0.16",
     "typescript": "~5.9.2"
   }
 }
