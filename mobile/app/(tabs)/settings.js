@@ -29,6 +29,7 @@ import {
   BarChart3,
   Trash2,
   Heart,
+  ExternalLink,
 } from "lucide-react-native"
 import { Colors, Spacing, Layout, Typography } from "../../theme"
 import { ICONS } from "../../theme/icons"
@@ -288,6 +289,18 @@ export default function SettingsScreen() {
             </View>
 
             <TouchableOpacity
+              style={styles.learnMoreButton}
+              onPress={() =>
+                Linking.openURL("https://www.ralphchang.com/blog/meds-privacy")
+              }
+            >
+              <Text style={styles.learnMoreText}>
+                Learn more about our privacy
+              </Text>
+              <ExternalLink size={14} color={Colors.primary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={styles.modalButton}
               onPress={() => setPrivacyModalVisible(false)}
             >
@@ -495,6 +508,17 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: Typography.caption.fontSize,
     lineHeight: 18,
+  },
+  learnMoreButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.lg,
+    gap: Spacing.xs,
+  },
+  learnMoreText: {
+    color: Colors.primary,
+    fontSize: Typography.caption.fontSize,
   },
   modalButton: {
     backgroundColor: Colors.primary,

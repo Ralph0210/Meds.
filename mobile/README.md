@@ -13,6 +13,8 @@ A privacy-first medication tracking app built with React Native and Expo.
 | **No Tracking**       | No analytics, no telemetry                        |
 | **Complete Deletion** | Deleting a medication removes ALL associated data |
 
+📖 **[Read our full privacy documentation →](https://www.ralphchang.com/blog/meds-privacy)**
+
 ### Data Architecture
 
 ```
