@@ -1,4 +1,4 @@
-# Meds
+# Meds.
 
 A privacy-first medication tracking app for iOS. Your data never leaves your device.
 
