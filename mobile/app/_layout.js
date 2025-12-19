@@ -2,11 +2,15 @@ import { Slot, Redirect, useSegments } from "expo-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { SafeAreaProvider } from "react-native-safe-area-context"
 import { StatusBar } from "expo-status-bar"
-import { useEffect } from "react"
-import { View, ActivityIndicator, StyleSheet } from "react-native"
+import { useEffect, useCallback } from "react"
+import { View, StyleSheet } from "react-native"
+import * as SplashScreen from "expo-splash-screen"
 import { initDatabase } from "../lib/db"
 import { OnboardingProvider, useOnboarding } from "../hooks/useOnboarding"
 import { Colors } from "../theme"
+
+// Keep splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync()
 
 const queryClient = new QueryClient()
 
@@ -18,13 +22,16 @@ function RootLayoutNav() {
     initDatabase()
   }, [])
 
-  // Show loading while checking onboarding status
+  // Hide splash screen when loading is complete
+  const onLayoutRootView = useCallback(async () => {
+    if (!isLoading) {
+      await SplashScreen.hideAsync()
+    }
+  }, [isLoading])
+
+  // Keep splash visible while loading
   if (isLoading) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    )
+    return null
   }
 
   // Determine current route
@@ -42,10 +49,10 @@ function RootLayoutNav() {
   }
 
   return (
-    <>
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <Slot />
       <StatusBar style="light" />
-    </>
+    </View>
   )
 }
 

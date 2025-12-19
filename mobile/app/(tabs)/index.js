@@ -28,6 +28,32 @@ export default function HomeScreen() {
     return "Good Evening"
   }
 
+  // Helper to format date with Today/Tomorrow/Yesterday
+  const formatDateLabel = (date) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const target = new Date(date)
+    target.setHours(0, 0, 0, 0)
+
+    const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24))
+
+    const monthDay = date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+    })
+
+    if (diffDays === 0) return `Today, ${monthDay}`
+    if (diffDays === 1) return `Tomorrow, ${monthDay}`
+    if (diffDays === -1) return `Yesterday, ${monthDay}`
+
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    })
+  }
+
   // Fix date string to be local YYYY-MM-DD
   const dateStr = selectedDate.toLocaleDateString("en-CA")
 
@@ -46,6 +72,7 @@ export default function HomeScreen() {
       const data = getRecord(dateStr)
       return data || { data: {} }
     },
+    placeholderData: (previousData) => previousData, // Keep showing old data while fetching
   })
 
   // 3. Mutation
@@ -171,11 +198,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Text style={styles.greeting}>{getGreeting()}</Text>
         <Text style={styles.headerSubtitle}>
-          {focusedDate.toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}
+          {formatDateLabel(focusedDate)}
         </Text>
       </View>
 

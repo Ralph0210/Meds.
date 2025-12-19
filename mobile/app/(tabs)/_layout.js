@@ -17,6 +17,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: "#d0bcff",
         tabBarInactiveTintColor: "#8e9099",
         tabBarShowLabel: false,
+        animation: "none", // Disable tab transition animations
       }}
     >
       <Tabs.Screen
