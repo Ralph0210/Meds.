@@ -1,6 +1,6 @@
-# MedTracker Mobile
+# Meds - Technical Documentation
 
-A privacy-first medication tracking app built with React Native and Expo.
+> Detailed architecture and development guide for the Meds iOS app.
 
 ## 🔒 Privacy First
 

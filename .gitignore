@@ -1,4 +1,48 @@
-.DS_Store
-*.log
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# Dependencies
 node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native builds
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+/mobile/ios
+/mobile/android
+
+# Metro
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# Local env files
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
 .vscode/
+.idea/
+
+# Logs
+*.log
+*storybook.log
+storybook-static
