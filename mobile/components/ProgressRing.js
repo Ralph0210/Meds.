@@ -1,6 +1,58 @@
-import React from "react"
+import React, { useEffect, memo } from "react"
 import Svg, { Circle, G } from "react-native-svg"
+import Animated, {
+  useSharedValue,
+  useAnimatedProps,
+  withTiming,
+  Easing,
+} from "react-native-reanimated"
 import { Colors } from "../theme"
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle)
+
+// Animated segment component
+const AnimatedSegment = memo(function AnimatedSegment({
+  size,
+  r,
+  rotation,
+  color,
+  completed,
+  strokeWidth,
+  dashLength,
+  circum,
+}) {
+  const progress = useSharedValue(completed ? 1 : 0)
+
+  useEffect(() => {
+    progress.value = withTiming(completed ? 1 : 0, {
+      duration: 400,
+      easing: Easing.out(Easing.cubic),
+    })
+  }, [completed, progress])
+
+  const animatedProps = useAnimatedProps(() => {
+    const currentDash = progress.value * dashLength
+    return {
+      strokeDasharray: [currentDash, circum - currentDash],
+      strokeOpacity: 0.25 + progress.value * 0.75,
+    }
+  })
+
+  return (
+    <G rotation={rotation} origin={`${size / 2}, ${size / 2}`}>
+      <AnimatedCircle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="transparent"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        animatedProps={animatedProps}
+      />
+    </G>
+  )
+})
 
 export default function ProgressRing({
   progress, // 0 to 1 (Legacy support)
@@ -46,19 +98,17 @@ export default function ProgressRing({
         {segments.map((seg, i) => {
           const rotation = -90 + (360 / total) * i
           return (
-            <G key={i} rotation={rotation} origin={`${size / 2}, ${size / 2}`}>
-              <Circle
-                cx={size / 2}
-                cy={size / 2}
-                r={r}
-                fill="transparent"
-                stroke={seg.color || color}
-                strokeOpacity={seg.completed ? 1 : 0.25}
-                strokeWidth={strokeWidth}
-                strokeDasharray={`${dashLength} ${circum - dashLength}`}
-                strokeLinecap="round"
-              />
-            </G>
+            <AnimatedSegment
+              key={i}
+              size={size}
+              r={r}
+              rotation={rotation}
+              color={seg.color || color}
+              completed={seg.completed}
+              strokeWidth={strokeWidth}
+              dashLength={dashLength}
+              circum={circum}
+            />
           )
         })}
       </Svg>

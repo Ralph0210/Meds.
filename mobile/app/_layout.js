@@ -2,11 +2,12 @@ import { Slot, Redirect, useSegments } from "expo-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { SafeAreaProvider } from "react-native-safe-area-context"
 import { StatusBar } from "expo-status-bar"
-import { useEffect, useCallback } from "react"
-import { View, StyleSheet } from "react-native"
+import { useEffect, useCallback, useRef } from "react"
+import { View, StyleSheet, AppState } from "react-native"
 import * as SplashScreen from "expo-splash-screen"
 import { initDatabase } from "../lib/db"
 import { OnboardingProvider, useOnboarding } from "../hooks/useOnboarding"
+import { useAppStore } from "../store/useAppStore"
 import { Colors } from "../theme"
 
 // Keep splash screen visible while we fetch resources
@@ -17,10 +18,26 @@ const queryClient = new QueryClient()
 function RootLayoutNav() {
   const { hasSeenOnboarding, isLoading } = useOnboarding()
   const segments = useSegments()
+  const resetToToday = useAppStore((state) => state.resetToToday)
+  const appState = useRef(AppState.currentState)
 
   useEffect(() => {
     initDatabase()
   }, [])
+
+  // Reset to today when app comes from background
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === "active"
+      ) {
+        resetToToday()
+      }
+      appState.current = nextAppState
+    })
+    return () => subscription.remove()
+  }, [resetToToday])
 
   // Hide splash screen when loading is complete
   const onLayoutRootView = useCallback(async () => {

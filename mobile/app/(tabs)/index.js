@@ -5,9 +5,10 @@ import {
   RefreshControl,
   StyleSheet,
 } from "react-native"
-import { useState } from "react"
+import { useState, useCallback } from "react"
 // import { useNavigation } from "expo-router" // Unused
 import { SafeAreaView } from "react-native-safe-area-context"
+import { useFocusEffect } from "expo-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getMedications, getRecord, updateRecord } from "../../lib/db"
 import { useAppStore } from "../../store/useAppStore"
@@ -17,9 +18,17 @@ import { Colors, Layout, Spacing, Typography } from "../../theme"
 import { CheckCircle2, Leaf } from "lucide-react-native"
 
 export default function HomeScreen() {
-  const { selectedDate } = useAppStore()
+  const { selectedDate, resetToToday } = useAppStore()
   const queryClient = useQueryClient()
   const [focusedDate, setFocusedDate] = useState(selectedDate)
+
+  // Reset to today when screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      resetToToday()
+      setFocusedDate(new Date())
+    }, [resetToToday])
+  )
 
   const getGreeting = () => {
     const hour = new Date().getHours()

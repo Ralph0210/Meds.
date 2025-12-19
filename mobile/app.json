@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Meds",
+    "name": "Meds.",
     "slug": "mobile",
     "scheme": "medtracker",
     "version": "1.0.0",
@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon-1024.png",
       "resizeMode": "contain",
       "backgroundColor": "#0b0c0e"
     },
