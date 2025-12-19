@@ -294,6 +294,10 @@ export default function DateStrip({ config = [], onFocusedDateChange }) {
           snapToInterval={FULL_ITEM_WIDTH}
           snapToAlignment="start"
           decelerationRate="fast"
+          onScrollBeginDrag={() => {
+            // User started dragging - clear programmatic guard
+            isProgrammatic.current = false
+          }}
           onScroll={onScroll}
           scrollEventThrottle={16} // Standard for smooth updates
           onMomentumScrollEnd={(ev) => {

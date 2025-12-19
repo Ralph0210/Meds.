@@ -295,7 +295,7 @@ export default function SettingsScreen() {
               }
             >
               <Text style={styles.learnMoreText}>
-                Learn more about our privacy
+                Learn more about your privacy
               </Text>
               <ExternalLink size={14} color={Colors.primary} />
             </TouchableOpacity>
@@ -320,7 +320,7 @@ export default function SettingsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.appName}>Meds</Text>
+              <Text style={styles.appName}>Meds.</Text>
               <Text style={styles.appVersion}>Version 1.0.0</Text>
             </View>
 
