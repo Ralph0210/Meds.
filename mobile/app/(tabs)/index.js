@@ -44,7 +44,6 @@ export default function HomeScreen() {
     queryKey: ["record", dateStr],
     queryFn: async () => {
       const data = getRecord(dateStr)
-      console.log("Fetched Record:", dateStr, data)
       return data || { data: {} }
     },
   })
@@ -52,7 +51,6 @@ export default function HomeScreen() {
   // 3. Mutation
   const mutation = useMutation({
     mutationFn: async ({ key, value }) => {
-      console.log("Mutating:", key, value)
       // Get current state (handled by db update, but for optimistic update we need key/val)
       const newData = updateRecord(dateStr, key, value)
       return newData
@@ -211,7 +209,7 @@ export default function HomeScreen() {
         ) : (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconBg}>
-              <Leaf size={32} color={Colors.textSecondary} />
+              <Leaf size={32} color={Colors.primary} />
             </View>
             <Text style={styles.emptyTitle}>All Clear</Text>
             <Text style={styles.emptyDesc}>

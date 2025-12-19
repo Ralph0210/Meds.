@@ -7,6 +7,8 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Modal,
+  Linking,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -15,9 +17,19 @@ import {
   addMedication,
   updateMedication,
   deleteMedication,
-  resetDatabase,
 } from "../../lib/db"
-import { Plus, ChevronRight } from "lucide-react-native"
+import {
+  Plus,
+  ChevronRight,
+  MessageSquare,
+  Shield,
+  Info,
+  Lock,
+  UserX,
+  BarChart3,
+  Trash2,
+  Heart,
+} from "lucide-react-native"
 import { Colors, Spacing, Layout, Typography } from "../../theme"
 import { ICONS } from "../../theme/icons"
 import EditMedicationModal from "../../components/EditMedicationModal"
@@ -26,8 +38,12 @@ export default function SettingsScreen() {
   const queryClient = useQueryClient()
   const [editingMed, setEditingMed] = useState(null)
   const [isModalVisible, setIsModalVisible] = useState(false)
+  const [privacyModalVisible, setPrivacyModalVisible] = useState(false)
+  const [aboutModalVisible, setAboutModalVisible] = useState(false)
 
-  // Fetch Config
+  // Placeholder - user will provide the actual URL
+  const FEEDBACK_URL =
+    "https://docs.google.com/forms/d/e/1FAIpQLScwpJBmzQLoayctrKH54pNFc9kmrxBxRkF7AFPg-wjoHhV3ag/viewform?usp=dialog"
   const { data: meds, isLoading } = useQuery({
     queryKey: ["medications"],
     queryFn: async () => {
@@ -127,6 +143,60 @@ export default function SettingsScreen() {
           <Plus color={Colors.textOnPrimary} size={24} />
           <Text style={styles.addBtnText}>Add Medication</Text>
         </TouchableOpacity>
+
+        {/* Settings Section */}
+        <View style={styles.settingsSection}>
+          <Text style={styles.sectionHeader}>Settings</Text>
+
+          <TouchableOpacity
+            style={styles.settingsItem}
+            onPress={() => Linking.openURL(FEEDBACK_URL)}
+          >
+            <View
+              style={[
+                styles.settingsIconBox,
+                { backgroundColor: Colors.primary + "20" },
+              ]}
+            >
+              <MessageSquare size={20} color={Colors.primary} />
+            </View>
+            <Text style={styles.settingsLabel}>Send Feedback</Text>
+            <ChevronRight size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingsItem}
+            onPress={() => setPrivacyModalVisible(true)}
+          >
+            <View
+              style={[
+                styles.settingsIconBox,
+                { backgroundColor: "#4CAF50" + "20" },
+              ]}
+            >
+              <Shield size={20} color="#4CAF50" />
+            </View>
+            <Text style={styles.settingsLabel}>Privacy</Text>
+            <ChevronRight size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.settingsItem, { borderBottomWidth: 0 }]}
+            onPress={() => setAboutModalVisible(true)}
+          >
+            <View
+              style={[
+                styles.settingsIconBox,
+                { backgroundColor: Colors.textSecondary + "20" },
+              ]}
+            >
+              <Info size={20} color={Colors.textSecondary} />
+            </View>
+            <Text style={styles.settingsLabel}>About</Text>
+            <ChevronRight size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        </View>
+
         <View style={{ height: 100 }} />
       </ScrollView>
 
@@ -137,6 +207,131 @@ export default function SettingsScreen() {
         onSave={handleSaveMedication}
         onDelete={handleDeleteMedication}
       />
+
+      {/* Privacy Modal */}
+      <Modal
+        visible={privacyModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setPrivacyModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Shield size={32} color={Colors.primary} />
+              <Text style={styles.modalTitle}>Your Privacy</Text>
+            </View>
+
+            <View style={styles.modalBody}>
+              <View style={styles.privacyRow}>
+                <Lock
+                  size={20}
+                  color={Colors.primary}
+                  style={styles.privacyIcon}
+                />
+                <View style={styles.privacyTextContainer}>
+                  <Text style={styles.privacyBold}>100% Local Storage</Text>
+                  <Text style={styles.privacyDesc}>
+                    All your data stays on your device. Nothing is uploaded to
+                    any server.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.privacyRow}>
+                <UserX
+                  size={20}
+                  color={Colors.primary}
+                  style={styles.privacyIcon}
+                />
+                <View style={styles.privacyTextContainer}>
+                  <Text style={styles.privacyBold}>No Accounts Required</Text>
+                  <Text style={styles.privacyDesc}>
+                    Use the app without signing up or providing any personal
+                    information.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.privacyRow}>
+                <BarChart3
+                  size={20}
+                  color={Colors.primary}
+                  style={styles.privacyIcon}
+                />
+                <View style={styles.privacyTextContainer}>
+                  <Text style={styles.privacyBold}>
+                    No Analytics or Tracking
+                  </Text>
+                  <Text style={styles.privacyDesc}>
+                    We don't collect usage data, crash reports, or analytics.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.privacyRow}>
+                <Trash2
+                  size={20}
+                  color={Colors.primary}
+                  style={styles.privacyIcon}
+                />
+                <View style={styles.privacyTextContainer}>
+                  <Text style={styles.privacyBold}>
+                    Your Data, Your Control
+                  </Text>
+                  <Text style={styles.privacyDesc}>
+                    Delete the app and all your data is gone. No backups, no
+                    traces.
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setPrivacyModalVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* About Modal */}
+      <Modal
+        visible={aboutModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setAboutModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.appName}>Meds</Text>
+              <Text style={styles.appVersion}>Version 1.0.0</Text>
+            </View>
+
+            <View style={styles.modalBody}>
+              <Text style={styles.aboutText}>
+                A simple, private medication tracker.
+              </Text>
+
+              <Text style={[styles.aboutText, { marginTop: Spacing.md }]}>
+                Made with{" "}
+                <Heart size={14} color={Colors.primary} fill={Colors.primary} />{" "}
+                for people who value their privacy.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setAboutModalVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
@@ -214,5 +409,118 @@ const styles = StyleSheet.create({
   deleteText: {
     fontWeight: "bold",
     marginLeft: Spacing.sm,
+  },
+  // Settings Section
+  settingsSection: {
+    marginTop: Spacing.xxl,
+    backgroundColor: Colors.surfaceHighlight,
+    borderRadius: Layout.radius.lg,
+    overflow: "hidden",
+  },
+  sectionHeader: {
+    color: Colors.textSecondary,
+    fontSize: Typography.caption.fontSize,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+  },
+  settingsItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.background,
+  },
+  settingsIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: Layout.radius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.md,
+  },
+  settingsLabel: {
+    flex: 1,
+    color: Colors.textPrimary,
+    fontSize: Typography.body.fontSize,
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: Layout.radius.xl,
+    borderTopRightRadius: Layout.radius.xl,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.xxl + Spacing.lg,
+  },
+  modalHeader: {
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+  },
+  modalTitle: {
+    color: Colors.textPrimary,
+    fontSize: Typography.title.fontSize,
+    fontWeight: "bold",
+    marginTop: Spacing.sm,
+  },
+  modalBody: {
+    marginBottom: Spacing.xl,
+  },
+  privacyRow: {
+    flexDirection: "row",
+    marginBottom: Spacing.lg,
+  },
+  privacyIcon: {
+    marginRight: Spacing.md,
+    marginTop: 2,
+  },
+  privacyTextContainer: {
+    flex: 1,
+  },
+  privacyBold: {
+    color: Colors.textPrimary,
+    fontWeight: "600",
+    fontSize: Typography.body.fontSize,
+    marginBottom: 2,
+  },
+  privacyDesc: {
+    color: Colors.textSecondary,
+    fontSize: Typography.caption.fontSize,
+    lineHeight: 18,
+  },
+  modalButton: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.lg,
+    borderRadius: Layout.radius.lg,
+    alignItems: "center",
+  },
+  modalButtonText: {
+    color: Colors.textOnPrimary,
+    fontWeight: "bold",
+    fontSize: Typography.body.fontSize,
+  },
+  appName: {
+    color: Colors.textPrimary,
+    fontSize: 28,
+    fontWeight: "bold",
+  },
+  appVersion: {
+    color: Colors.textSecondary,
+    fontSize: Typography.body.fontSize,
+    marginTop: Spacing.xs,
+  },
+  aboutText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.body.fontSize,
+    textAlign: "center",
+    lineHeight: 22,
   },
 })

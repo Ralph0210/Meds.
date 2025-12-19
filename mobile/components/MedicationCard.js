@@ -1,5 +1,6 @@
 import { View, Text, Pressable, StyleSheet } from "react-native"
 import { Check } from "lucide-react-native"
+import AnimatedCheckbox from "./AnimatedCheckbox"
 
 import { LinearGradient } from "expo-linear-gradient"
 import { Colors, Spacing, Layout, Typography } from "../theme"
@@ -80,20 +81,12 @@ export default function MedicationCard({
             )}
 
             {!disabled && (
-              <Pressable
+              <AnimatedCheckbox
+                checked={checked}
                 onPress={() => onToggle(infoKey, !checked)}
-                style={[
-                  styles.checkbox,
-                  checked
-                    ? {
-                        backgroundColor: config.color,
-                        borderColor: config.color,
-                      }
-                    : styles.checkboxUnchecked,
-                ]}
-              >
-                {checked && <Check size={20} color="white" />}
-              </Pressable>
+                color={config.color}
+                size={32}
+              />
             )}
           </View>
         </View>
@@ -130,20 +123,12 @@ export default function MedicationCard({
                   >
                     <Text style={styles.timeLabel}>{label}</Text>
                     {!disabled && (
-                      <Pressable
+                      <AnimatedCheckbox
+                        checked={checked}
                         onPress={() => onToggle(k, !checked)}
-                        style={[
-                          styles.checkbox,
-                          checked
-                            ? {
-                                backgroundColor: config.color,
-                                borderColor: config.color,
-                              }
-                            : styles.checkboxUnchecked,
-                        ]}
-                      >
-                        {checked && <Check size={20} color="white" />}
-                      </Pressable>
+                        color={config.color}
+                        size={32}
+                      />
                     )}
                   </View>
                   {!isLast && <View style={styles.divider} />}
@@ -173,15 +158,12 @@ export default function MedicationCard({
         </View>
 
         {!disabled && (
-          <Pressable
+          <AnimatedCheckbox
+            checked={checked}
             onPress={() => onToggle(key, !checked)}
-            style={[
-              styles.checkbox,
-              checked ? styles.checkboxChecked : styles.checkboxUnchecked,
-            ]}
-          >
-            {checked && <Check size={20} color="white" />}
-          </Pressable>
+            color={config.color}
+            size={32}
+          />
         )}
       </View>
     )
@@ -327,20 +309,12 @@ export default function MedicationCard({
                 >
                   <Text style={styles.timeLabel}>{label}</Text>
                   {!disabled && (
-                    <Pressable
+                    <AnimatedCheckbox
+                      checked={checked}
                       onPress={() => onToggle(k, !checked)}
-                      style={[
-                        styles.checkbox,
-                        checked
-                          ? {
-                              backgroundColor: config.color,
-                              borderColor: config.color,
-                            }
-                          : styles.checkboxUnchecked,
-                      ]}
-                    >
-                      {checked && <Check size={20} color="white" />}
-                    </Pressable>
+                      color={config.color}
+                      size={32}
+                    />
                   )}
                 </View>
                 {!isLast && <View style={styles.divider} />}

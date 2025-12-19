@@ -18,7 +18,6 @@ import {
   MapPin,
   ChevronDown,
 } from "lucide-react-native"
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 
 const ITEM_WIDTH = 48
 const ITEM_MARGIN = Spacing.xs
@@ -135,6 +134,7 @@ export default function DateStrip({ config = [], onFocusedDateChange }) {
   const { selectedDate, setSelectedDate } = useAppStore()
   const flatListRef = useRef(null)
   const isProgrammatic = useRef(false)
+  const [focusedIndex, setFocusedIndex] = useState(null) // Track visually focused date during scroll
 
   // Memoize dates to prevent recreation
   const { dates, todayIndex } = useMemo(() => {
@@ -180,6 +180,9 @@ export default function DateStrip({ config = [], onFocusedDateChange }) {
     // Determine target index
     const index = dates.findIndex((d) => isSameDay(d, selectedDate))
     if (index === -1) return
+
+    // Sync focusedIndex with selectedDate
+    setFocusedIndex(index)
 
     const offset = getCenterOffset(index)
 
@@ -231,6 +234,7 @@ export default function DateStrip({ config = [], onFocusedDateChange }) {
       if (onFocusedDateChange) {
         onFocusedDateChange(centerDate)
       }
+      setFocusedIndex(clampedIndex) // Update visual focus immediately
     },
     [dates, onFocusedDateChange, minOffset, maxOffset]
   )
@@ -252,7 +256,11 @@ export default function DateStrip({ config = [], onFocusedDateChange }) {
       <DateItem
         item={item}
         index={index}
-        isSelected={isSameDay(item, selectedDate)}
+        isSelected={
+          focusedIndex !== null
+            ? index === focusedIndex
+            : isSameDay(item, selectedDate)
+        }
         isToday={isSameDay(item, new Date())}
         config={config}
         history={history}

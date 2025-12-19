@@ -1,36 +1,71 @@
-import { Slot } from "expo-router"
+import { Slot, Redirect, useSegments } from "expo-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { SafeAreaProvider } from "react-native-safe-area-context"
 import { StatusBar } from "expo-status-bar"
 import { useEffect } from "react"
-import { initDatabase, seedDefaults, resetDatabase } from "../lib/db"
+import { View, ActivityIndicator, StyleSheet } from "react-native"
+import { initDatabase } from "../lib/db"
+import { OnboardingProvider, useOnboarding } from "../hooks/useOnboarding"
+import { Colors } from "../theme"
 
 const queryClient = new QueryClient()
 
-let StorybookUIRoot
-try {
-  // eslint-disable-next-line
-  StorybookUIRoot = require("../.rnstorybook").default
-} catch (error) {
-  // Storybook might not be available in all environments
-}
-
-export default function RootLayout() {
-  if (process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true" && StorybookUIRoot) {
-    return <StorybookUIRoot />
-  }
+function RootLayoutNav() {
+  const { hasSeenOnboarding, isLoading } = useOnboarding()
+  const segments = useSegments()
 
   useEffect(() => {
     initDatabase()
-    // seedDefaults()
   }, [])
 
+  // Show loading while checking onboarding status
+  if (isLoading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    )
+  }
+
+  // Determine current route
+  const inOnboarding = segments[0] === "onboarding"
+
+  // Redirect logic using declarative Redirect component
+  // If not seen onboarding and not on onboarding screen -> go to onboarding
+  if (!hasSeenOnboarding && !inOnboarding) {
+    return <Redirect href="/onboarding" />
+  }
+
+  // If seen onboarding but still on onboarding screen -> go to app
+  if (hasSeenOnboarding && inOnboarding) {
+    return <Redirect href="/(tabs)" />
+  }
+
+  return (
+    <>
+      <Slot />
+      <StatusBar style="light" />
+    </>
+  )
+}
+
+export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
-        <Slot />
-        <StatusBar style="light" />
+        <OnboardingProvider>
+          <RootLayoutNav />
+        </OnboardingProvider>
       </SafeAreaProvider>
     </QueryClientProvider>
   )
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+})
