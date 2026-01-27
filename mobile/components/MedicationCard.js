@@ -117,8 +117,11 @@ export default function MedicationCard({
               >
                 <Text style={styles.cardTitle}>{config.name}</Text>
                 <Text style={styles.cardDesc}>
-                  {getDosageText()}
-                  {label ? ` • ${getTimeLabel(label)}` : ""}
+                  {(() => {
+                    const dosage = getDosageText()
+                    const time = label ? getTimeLabel(label) : ""
+                    return [dosage, time].filter(Boolean).join(" • ")
+                  })()}
                 </Text>
               </View>
             ) : (
@@ -152,10 +155,13 @@ export default function MedicationCard({
           >
             <Text style={styles.cardTitle}>{config.name}</Text>
             <Text style={styles.cardDesc}>
-              {getDosageText()}
-              {config.frequency
-                ? `, ${getFrequencyText(config.frequency)}`
-                : ""}
+              {(() => {
+                const dosage = getDosageText()
+                const freq = config.frequency
+                  ? getFrequencyText(config.frequency)
+                  : ""
+                return [dosage, freq].filter(Boolean).join(", ")
+              })()}
             </Text>
           </View>
           <View>
