@@ -1,0 +1,143 @@
+{
+  "greeting": {
+    "morning": "早安",
+    "afternoon": "午安",
+    "evening": "晚安"
+  },
+  "date": {
+    "today": "今天",
+    "tomorrow": "明天",
+    "yesterday": "昨天",
+    "weekday": {
+      "0": "日",
+      "1": "一",
+      "2": "二",
+      "3": "三",
+      "4": "四",
+      "5": "五",
+      "6": "六"
+    }
+  },
+  "home": {
+    "loading": "載入中...",
+    "emptyTitle": "沒有藥物",
+    "emptyDesc": "今天沒有排定的藥物。"
+  },
+  "manager": {
+    "title": "管理",
+    "unnamedMedication": "未命名藥物"
+  },
+  "button": {
+    "addMedication": "新增藥物",
+    "saveMedication": "儲存藥物",
+    "deleteMedication": "刪除藥物",
+    "cancel": "取消",
+    "delete": "刪除",
+    "close": "關閉",
+    "gotIt": "了解"
+  },
+
+  "settings": {
+    "title": "設定",
+    "feedback": "提供回饋",
+    "privacy": "隱私權",
+    "about": "關於"
+  },
+  "privacy": {
+    "title": "您的隱私權",
+    "localStorage": "100% 本機儲存",
+    "localStorageDesc": "所有資料都儲存在您的裝置上，不會上傳到任何地方。",
+    "noAccounts": "無需帳號",
+    "noAccountsDesc": "無需註冊或提供任何個人資訊即可使用此 App。",
+    "noAnalytics": "無分析或追蹤",
+    "noAnalyticsDesc": "我們不收集使用資料、當機報告或分析數據。",
+    "yourData": "您的資料，由您掌控",
+    "yourDataDesc": "刪除 App 後，所有資料都會消失。沒有備份，沒有痕跡。",
+    "learnMore": "進一步了解您的隱私權"
+  },
+  "about": {
+    "appName": "Meds.",
+    "version": "版本 1.0.1",
+    "desc": "簡單、安全的追蹤您藥物的服用。",
+    "madeWith": "為重視隱私的人打造。"
+  },
+  "history": {
+    "medications": "藥物",
+    "noActive": "沒有使用中的藥物。",
+    "medication": "藥物"
+  },
+  "onboarding": {
+    "slide1Title": "用您的方式追蹤藥物",
+    "slide1Body": "一個簡單的工具幫助您記住。無需帳號、無追蹤、無廣告。",
+    "slide1Button": "開始使用",
+    "slide2Title": "使用方式",
+    "slide2Step1": "在設定中新增您的藥物",
+    "slide2Step2": "標記已服用",
+    "slide2Step3": "就這樣",
+    "slide2Button": "繼續",
+    "slide3Title": "您的資料屬於您",
+    "slide3Body": "所有資料都儲存在您的裝置上。我們無法看到您的資料——它完全屬於您。",
+    "slide3Button": "開始使用 App"
+  },
+  "form": {
+    "name": "名稱",
+    "namePlaceholder": "例如：降血糖藥",
+    "take": "服用",
+    "frequency": "頻率",
+    "onceDay": "每天一次",
+    "twiceDay": "每天兩次",
+    "threeDay": "每天三次",
+    "customSchedule": "自訂時程",
+    "setDuration": "設定期間",
+    "startDate": "開始日期",
+    "cycleLength": "週期長度（天）",
+    "activeDays": "服藥天數",
+    "reminderNotifications": "提醒通知",
+    "personalize": "個人化",
+    "color": "顏色",
+    "icon": "圖示",
+    "intervalSettings": "間隔設定",
+    "repeatEvery": "重複間隔（天）",
+    "nextDueDate": "下一次服用日期",
+    "cyclicSettings": "循環設定",
+    "courseSettings": "療程設定",
+    "courseDuration": "期間",
+    "intervalSchedule": "每 X 天",
+    "cyclicSchedule": "循環服用",
+    "days": "天"
+  },
+  "alert": {
+    "error": "錯誤",
+    "missingName": "缺少名稱",
+    "enterName": "請輸入藥物名稱。",
+    "missingDuration": "缺少期間",
+    "enterDuration": "請輸入期間數值（例如：天數或藥丸數量）。",
+    "missingStartDate": "缺少開始日期",
+    "selectStartDate": "請選擇療程的開始日期。",
+    "deleteMedication": "刪除藥物？",
+    "cannotUndo": "此動作無法復原。",
+    "notificationsDisabled": "通知已停用",
+    "enableNotifications": "請在裝置設定中啟用通知以接收藥物提醒。",
+    "failedDelete": "刪除失敗"
+  },
+  "notification": {
+    "title": "藥物提醒",
+    "takeSingle": "服用 %{name}",
+    "takeTwo": "服用 %{name1} 和 %{name2}",
+    "takeMore": "服用 %{names}，還有 %{count} 項"
+  },
+  "unit": {
+    "pill": "顆",
+    "mg": "毫克",
+    "ml": "毫升"
+  },
+  "time": {
+    "morning": "早上",
+    "noon": "中午",
+    "evening": "傍晚",
+    "night": "晚上",
+    "beforeMeal": "飯前",
+    "afterMeal": "飯後",
+    "time": "時間"
+  }
+}

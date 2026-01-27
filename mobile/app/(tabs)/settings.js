@@ -34,6 +34,11 @@ import {
 import { Colors, Spacing, Layout, Typography } from "../../theme"
 import { ICONS } from "../../theme/icons"
 import EditMedicationModal from "../../components/EditMedicationModal"
+import {
+  rescheduleNotificationsForMedication,
+  cancelNotificationsForMedication,
+} from "../../lib/notificationService"
+import { t } from "../../lib/i18n"
 
 export default function SettingsScreen() {
   const queryClient = useQueryClient()
@@ -78,36 +83,78 @@ export default function SettingsScreen() {
         payload.keys = payload.times.map((t, i) => `med_${baseId}_${i}`)
       }
 
+      let savedId = payload.id
       if (isNew) {
         delete payload.id
-        await addMedication(payload)
+        savedId = await addMedication(payload)
       } else {
         await updateMedication(payload)
+      }
+
+      // Schedule or cancel notifications based on notificationEnabled
+      if (savedId) {
+        await rescheduleNotificationsForMedication({ ...payload, id: savedId })
       }
 
       queryClient.invalidateQueries(["medications"])
       handleClose()
     } catch (err) {
-      Alert.alert("Error", err.message)
+      Alert.alert(t("alert.error"), err.message)
     }
   }
 
   const handleDeleteMedication = async (med) => {
     try {
       if (med.id) {
+        // Cancel notifications before deleting
+        await cancelNotificationsForMedication(med.id)
         await deleteMedication(med.id)
         queryClient.invalidateQueries(["medications"])
         handleClose()
       }
     } catch (err) {
-      Alert.alert("Error", "Failed to delete")
+      Alert.alert(t("alert.error"), t("alert.failedDelete"))
     }
+  }
+
+  const getLocalizedDosage = (med) => {
+    let qty = med.dosageQuantity
+    let unitKey = med.dosageUnit
+
+    // If structured data missing, try parsing the legacy string "1 pill"
+    if (!qty && med.dosage) {
+      const match = med.dosage.match(/^([\d.]+)\s*(.+)$/)
+      if (match) {
+        qty = match[1]
+        let rawUnit = match[2].toLowerCase()
+        // Map common English units to keys
+        if (rawUnit.includes("pill")) unitKey = "pill"
+        else if (rawUnit === "mg") unitKey = "mg"
+        else if (rawUnit === "ml") unitKey = "ml"
+      }
+    }
+
+    if (qty && unitKey) {
+      return `${qty} ${t(`unit.${unitKey}`)}`
+    }
+    return med.dosage || ""
+  }
+
+  const getLocalizedFrequency = (freq) => {
+    if (!freq) return ""
+    const map = {
+      "1x Daily": t("form.onceDay"),
+      "2x Daily": t("form.twiceDay"),
+      "3x Daily": t("form.threeDay"),
+      Custom: t("form.customSchedule"),
+    }
+    return map[freq] || freq
   }
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Manager</Text>
+        <Text style={styles.headerTitle}>{t("manager.title")}</Text>
       </View>
 
       <ScrollView style={styles.content}>
@@ -133,21 +180,24 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.itemInfo}>
               <Text style={styles.itemName}>
-                {med.name || "Unnamed Medication"}
+                {med.name || t("manager.unnamedMedication")}
               </Text>
-              <Text style={styles.itemDesc}>{med.dosage || med.frequency}</Text>
+              <Text style={styles.itemDesc}>
+                {getLocalizedDosage(med) ||
+                  getLocalizedFrequency(med.frequency)}
+              </Text>
             </View>
             <ChevronRight color={Colors.textTertiary} size={20} />
           </TouchableOpacity>
         ))}
         <TouchableOpacity style={styles.addBtn} onPress={handleNewLine}>
           <Plus color={Colors.textOnPrimary} size={24} />
-          <Text style={styles.addBtnText}>Add Medication</Text>
+          <Text style={styles.addBtnText}>{t("button.addMedication")}</Text>
         </TouchableOpacity>
 
         {/* Settings Section */}
         <View style={styles.settingsSection}>
-          <Text style={styles.sectionHeader}>Settings</Text>
+          <Text style={styles.sectionHeader}>{t("settings.title")}</Text>
 
           <TouchableOpacity
             style={styles.settingsItem}
@@ -161,7 +211,7 @@ export default function SettingsScreen() {
             >
               <MessageSquare size={20} color={Colors.primary} />
             </View>
-            <Text style={styles.settingsLabel}>Send Feedback</Text>
+            <Text style={styles.settingsLabel}>{t("settings.feedback")}</Text>
             <ChevronRight size={18} color={Colors.textTertiary} />
           </TouchableOpacity>
 
@@ -177,7 +227,7 @@ export default function SettingsScreen() {
             >
               <Shield size={20} color="#4CAF50" />
             </View>
-            <Text style={styles.settingsLabel}>Privacy</Text>
+            <Text style={styles.settingsLabel}>{t("settings.privacy")}</Text>
             <ChevronRight size={18} color={Colors.textTertiary} />
           </TouchableOpacity>
 
@@ -193,7 +243,7 @@ export default function SettingsScreen() {
             >
               <Info size={20} color={Colors.textSecondary} />
             </View>
-            <Text style={styles.settingsLabel}>About</Text>
+            <Text style={styles.settingsLabel}>{t("settings.about")}</Text>
             <ChevronRight size={18} color={Colors.textTertiary} />
           </TouchableOpacity>
         </View>
@@ -202,6 +252,7 @@ export default function SettingsScreen() {
       </ScrollView>
 
       <EditMedicationModal
+        key={isModalVisible ? "open" : "closed"}
         visible={isModalVisible}
         medication={editingMed}
         onClose={handleClose}
@@ -220,7 +271,7 @@ export default function SettingsScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Shield size={32} color={Colors.primary} />
-              <Text style={styles.modalTitle}>Your Privacy</Text>
+              <Text style={styles.modalTitle}>{t("privacy.title")}</Text>
             </View>
 
             <View style={styles.modalBody}>
@@ -231,10 +282,11 @@ export default function SettingsScreen() {
                   style={styles.privacyIcon}
                 />
                 <View style={styles.privacyTextContainer}>
-                  <Text style={styles.privacyBold}>100% Local Storage</Text>
+                  <Text style={styles.privacyBold}>
+                    {t("privacy.localStorage")}
+                  </Text>
                   <Text style={styles.privacyDesc}>
-                    All your data stays on your device. Nothing is uploaded to
-                    any server.
+                    {t("privacy.localStorageDesc")}
                   </Text>
                 </View>
               </View>
@@ -246,10 +298,11 @@ export default function SettingsScreen() {
                   style={styles.privacyIcon}
                 />
                 <View style={styles.privacyTextContainer}>
-                  <Text style={styles.privacyBold}>No Accounts Required</Text>
+                  <Text style={styles.privacyBold}>
+                    {t("privacy.noAccounts")}
+                  </Text>
                   <Text style={styles.privacyDesc}>
-                    Use the app without signing up or providing any personal
-                    information.
+                    {t("privacy.noAccountsDesc")}
                   </Text>
                 </View>
               </View>
@@ -262,10 +315,10 @@ export default function SettingsScreen() {
                 />
                 <View style={styles.privacyTextContainer}>
                   <Text style={styles.privacyBold}>
-                    No Analytics or Tracking
+                    {t("privacy.noAnalytics")}
                   </Text>
                   <Text style={styles.privacyDesc}>
-                    We don't collect usage data, crash reports, or analytics.
+                    {t("privacy.noAnalyticsDesc")}
                   </Text>
                 </View>
               </View>
@@ -278,11 +331,10 @@ export default function SettingsScreen() {
                 />
                 <View style={styles.privacyTextContainer}>
                   <Text style={styles.privacyBold}>
-                    Your Data, Your Control
+                    {t("privacy.yourData")}
                   </Text>
                   <Text style={styles.privacyDesc}>
-                    Delete the app and all your data is gone. No backups, no
-                    traces.
+                    {t("privacy.yourDataDesc")}
                   </Text>
                 </View>
               </View>
@@ -294,9 +346,7 @@ export default function SettingsScreen() {
                 Linking.openURL("https://www.ralphchang.com/blog/meds-privacy")
               }
             >
-              <Text style={styles.learnMoreText}>
-                Learn more about your privacy
-              </Text>
+              <Text style={styles.learnMoreText}>{t("privacy.learnMore")}</Text>
               <ExternalLink size={14} color={Colors.primary} />
             </TouchableOpacity>
 
@@ -304,7 +354,7 @@ export default function SettingsScreen() {
               style={styles.modalButton}
               onPress={() => setPrivacyModalVisible(false)}
             >
-              <Text style={styles.modalButtonText}>Got it</Text>
+              <Text style={styles.modalButtonText}>{t("button.gotIt")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -320,19 +370,15 @@ export default function SettingsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.appName}>Meds.</Text>
-              <Text style={styles.appVersion}>Version 1.0.0</Text>
+              <Text style={styles.appName}>{t("about.appName")}</Text>
+              <Text style={styles.appVersion}>{t("about.version")}</Text>
             </View>
 
             <View style={styles.modalBody}>
-              <Text style={styles.aboutText}>
-                A simple, private medication tracker.
-              </Text>
+              <Text style={styles.aboutText}>{t("about.desc")}</Text>
 
               <Text style={[styles.aboutText, { marginTop: Spacing.md }]}>
-                Made with{" "}
-                <Heart size={14} color={Colors.primary} fill={Colors.primary} />{" "}
-                for people who value their privacy.
+                {t("about.madeWith")}
               </Text>
             </View>
 
@@ -340,7 +386,7 @@ export default function SettingsScreen() {
               style={styles.modalButton}
               onPress={() => setAboutModalVisible(false)}
             >
-              <Text style={styles.modalButtonText}>Close</Text>
+              <Text style={styles.modalButtonText}>{t("button.close")}</Text>
             </TouchableOpacity>
           </View>
         </View>

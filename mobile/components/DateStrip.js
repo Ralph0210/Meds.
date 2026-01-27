@@ -18,6 +18,7 @@ import {
   MapPin,
   ChevronDown,
 } from "lucide-react-native"
+import { t } from "../lib/i18n"
 
 const ITEM_WIDTH = 48
 const ITEM_MARGIN = Spacing.xs
@@ -103,7 +104,7 @@ const DateItem = memo(
                 },
               ]}
             >
-              {item.toLocaleDateString("en-US", { weekday: "narrow" })}
+              {t(`date.weekday.${item.getDay()}`)}
             </Text>
           </View>
           <View style={styles.ringContainer}>
@@ -127,7 +128,7 @@ const DateItem = memo(
       // Item shouldn't change for same index generally, but safety check
       prev.item.getTime() === next.item.getTime()
     )
-  }
+  },
 )
 
 export default function DateStrip({ config = [], onFocusedDateChange }) {
@@ -236,7 +237,7 @@ export default function DateStrip({ config = [], onFocusedDateChange }) {
       }
       setFocusedIndex(clampedIndex) // Update visual focus immediately
     },
-    [dates, onFocusedDateChange, minOffset, maxOffset]
+    [dates, onFocusedDateChange, minOffset, maxOffset],
   )
 
   const handleItemPress = useCallback(
@@ -248,7 +249,7 @@ export default function DateStrip({ config = [], onFocusedDateChange }) {
       setSelectedDate(item)
       if (onFocusedDateChange) onFocusedDateChange(item)
     },
-    [setSelectedDate, onFocusedDateChange, todayIndex]
+    [setSelectedDate, onFocusedDateChange, todayIndex],
   )
 
   const renderItem = ({ item, index }) => {
