@@ -27,6 +27,8 @@ export const useMedicationForm = (medication) => {
     config: {}, // For other types
     color: SUPPORTED_COLORS[0],
     icon: ICON_KEYS[0],
+    notificationEnabled: false,
+    notificationTimes: {}, // e.g. { "Morning": "8:00 AM", "9:30 AM": "9:30 AM" }
   })
 
   // Load existing medication data
@@ -49,6 +51,8 @@ export const useMedicationForm = (medication) => {
         config: medication.config || {},
         color: medication.color || SUPPORTED_COLORS[0],
         icon: medication.icon || ICON_KEYS[0],
+        notificationEnabled: medication.notificationEnabled || false,
+        notificationTimes: medication.notificationTimes || {},
       })
     } else {
       // Reset to defaults for new medication
@@ -62,6 +66,8 @@ export const useMedicationForm = (medication) => {
         config: { startDate: new Date().toLocaleDateString("en-CA") },
         color: SUPPORTED_COLORS[0],
         icon: ICON_KEYS[0],
+        notificationEnabled: false,
+        notificationTimes: {},
       })
     }
   }, [medication])

@@ -1,5 +1,5 @@
 // Current schema version - increment when adding migrations
-const CURRENT_SCHEMA_VERSION = 1
+const CURRENT_SCHEMA_VERSION = 2
 
 /**
  * Migration functions - each runs exactly once, in order
@@ -14,7 +14,7 @@ const MIGRATIONS = [
   (db) => {
     try {
       db.execSync(
-        "ALTER TABLE medications ADD COLUMN type TEXT DEFAULT 'daily'"
+        "ALTER TABLE medications ADD COLUMN type TEXT DEFAULT 'daily'",
       )
     } catch (e) {
       // Column already exists
@@ -25,10 +25,21 @@ const MIGRATIONS = [
       // Column already exists
     }
   },
-  // v2: Add future migrations here...
-  // (db) => {
-  //   db.execSync("ALTER TABLE medications ADD COLUMN notes TEXT");
-  // },
+  // v2: Notification preferences
+  (db) => {
+    try {
+      db.execSync(
+        "ALTER TABLE medications ADD COLUMN notificationEnabled INTEGER DEFAULT 0",
+      )
+    } catch (e) {
+      // Column already exists
+    }
+    try {
+      db.execSync("ALTER TABLE medications ADD COLUMN notificationTimes TEXT")
+    } catch (e) {
+      // Column already exists
+    }
+  },
 ]
 
 /**
@@ -37,7 +48,7 @@ const MIGRATIONS = [
 const getSchemaVersion = (db) => {
   try {
     const result = db.getFirstSync(
-      "SELECT version FROM schema_version ORDER BY version DESC LIMIT 1"
+      "SELECT version FROM schema_version ORDER BY version DESC LIMIT 1",
     )
     return result ? result.version : 0
   } catch (e) {
@@ -120,14 +131,27 @@ export const getMedicationsCore = (db) => {
     times: JSON.parse(row.times || "[]"),
     keys: JSON.parse(row.keys || "[]"),
     config: JSON.parse(row.config || "{}"),
+    notificationEnabled: Boolean(row.notificationEnabled),
+    notificationTimes: JSON.parse(row.notificationTimes || "{}"),
   }))
 }
 
 export const addMedicationCore = (db, med) => {
-  const { name, dosage, frequency, times, color, icon, keys, type, config } =
-    med
+  const {
+    name,
+    dosage,
+    frequency,
+    times,
+    color,
+    icon,
+    keys,
+    type,
+    config,
+    notificationEnabled,
+    notificationTimes,
+  } = med
   const result = db.runSync(
-    `INSERT INTO medications (name, dosage, frequency, times, color, icon, keys, type, config) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO medications (name, dosage, frequency, times, color, icon, keys, type, config, notificationEnabled, notificationTimes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       name,
       dosage,
@@ -138,7 +162,9 @@ export const addMedicationCore = (db, med) => {
       JSON.stringify(keys),
       type || "daily",
       JSON.stringify(config || {}),
-    ]
+      notificationEnabled ? 1 : 0,
+      JSON.stringify(notificationTimes || {}),
+    ],
   )
   return result.lastInsertRowId
 }
@@ -155,9 +181,11 @@ export const updateMedicationCore = (db, med) => {
     keys,
     type,
     config,
+    notificationEnabled,
+    notificationTimes,
   } = med
   db.runSync(
-    `UPDATE medications SET name=?, dosage=?, frequency=?, times=?, color=?, icon=?, keys=?, type=?, config=? WHERE id=?`,
+    `UPDATE medications SET name=?, dosage=?, frequency=?, times=?, color=?, icon=?, keys=?, type=?, config=?, notificationEnabled=?, notificationTimes=? WHERE id=?`,
     [
       name,
       dosage,
@@ -168,8 +196,10 @@ export const updateMedicationCore = (db, med) => {
       JSON.stringify(keys),
       type || "daily",
       JSON.stringify(config || {}),
+      notificationEnabled ? 1 : 0,
+      JSON.stringify(notificationTimes || {}),
       id,
-    ]
+    ],
   )
 }
 
@@ -226,7 +256,7 @@ export const getRecordCore = (db, date) => {
 export const getRecordsCore = (db, startDate, endDate) => {
   const results = db.getAllSync(
     "SELECT * FROM records WHERE date >= ? AND date <= ?",
-    [startDate, endDate]
+    [startDate, endDate],
   )
   const map = {}
   results.forEach((row) => {

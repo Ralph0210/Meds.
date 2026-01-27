@@ -18,6 +18,10 @@ import { ICONS, ICON_KEYS } from "../theme/icons"
 import Dropdown from "./Dropdown"
 
 import { useMedicationForm } from "../hooks/useMedicationForm"
+import {
+  requestPermissions,
+  hasNotificationPermission,
+} from "../lib/notificationService"
 
 export default function EditMedicationModal({
   visible,
@@ -46,14 +50,14 @@ export default function EditMedicationModal({
       if (!form.config.courseDuration) {
         Alert.alert(
           "Missing Duration",
-          "Please enter the duration value (e.g. number of days or pills)."
+          "Please enter the duration value (e.g. number of days or pills).",
         )
         return
       }
       if (!form.config.startDate) {
         Alert.alert(
           "Missing Start Date",
-          "Please select a start date for the course."
+          "Please select a start date for the course.",
         )
         return
       }
@@ -332,7 +336,7 @@ export default function EditMedicationModal({
                                   if (date) {
                                     let h = date.getHours()
                                     const m = String(
-                                      date.getMinutes()
+                                      date.getMinutes(),
                                     ).padStart(2, "0")
                                     const period = h >= 12 ? "PM" : "AM"
                                     if (h > 12) h -= 12
@@ -391,7 +395,7 @@ export default function EditMedicationModal({
                                     if (date) {
                                       let h = date.getHours()
                                       const m = String(
-                                        date.getMinutes()
+                                        date.getMinutes(),
                                       ).padStart(2, "0")
                                       const period = h >= 12 ? "PM" : "AM"
                                       if (h > 12) h -= 12
@@ -454,7 +458,7 @@ export default function EditMedicationModal({
                           <TouchableOpacity
                             onPress={() => {
                               const newTimes = form.times.filter(
-                                (_, i) => i !== index
+                                (_, i) => i !== index,
                               )
 
                               let newFreq = "Custom"
@@ -537,7 +541,7 @@ export default function EditMedicationModal({
                     height: 24,
                     borderRadius: 12,
                     backgroundColor:
-                      form.type === "course" ? Colors.primary : Colors.black20,
+                      form.type === "course" ? Colors.primary : Colors.white20,
                     padding: 2,
                     alignItems:
                       form.type === "course" ? "flex-end" : "flex-start",
@@ -587,7 +591,7 @@ export default function EditMedicationModal({
                       onChange={(val) =>
                         updateConfig(
                           "durationMode",
-                          val === "days" ? "days" : "quantity"
+                          val === "days" ? "days" : "quantity",
                         )
                       }
                       width={110}
@@ -613,11 +617,11 @@ export default function EditMedicationModal({
                             if (selectedDate) {
                               const y = selectedDate.getFullYear()
                               const m = String(
-                                selectedDate.getMonth() + 1
+                                selectedDate.getMonth() + 1,
                               ).padStart(2, "0")
                               const d = String(selectedDate.getDate()).padStart(
                                 2,
-                                "0"
+                                "0",
                               )
                               updateConfig("startDate", `${y}-${m}-${d}`)
                             }
@@ -670,6 +674,159 @@ export default function EditMedicationModal({
                     />
                   </View>
                 </View>
+              </View>
+            )}
+          </View>
+
+          {/* Reminder Notifications */}
+          <View style={styles.formGroup}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: form.notificationEnabled ? Spacing.sm : 0,
+              }}
+            >
+              <Text style={[styles.label, { marginBottom: 0 }]}>
+                Reminder Notifications
+              </Text>
+              <TouchableOpacity
+                onPress={async () => {
+                  if (!form.notificationEnabled) {
+                    // Turning ON - check/request permissions
+                    const hasPermission = await hasNotificationPermission()
+                    if (!hasPermission) {
+                      const granted = await requestPermissions()
+                      if (!granted) {
+                        Alert.alert(
+                          "Notifications Disabled",
+                          "Please enable notifications in your device settings to receive medication reminders.",
+                          [{ text: "OK" }],
+                        )
+                        return
+                      }
+                    }
+                  }
+                  setForm({
+                    ...form,
+                    notificationEnabled: !form.notificationEnabled,
+                  })
+                }}
+                style={{
+                  width: 40,
+                  height: 24,
+                  borderRadius: 12,
+                  backgroundColor: form.notificationEnabled
+                    ? Colors.primary
+                    : Colors.white20,
+                  padding: 2,
+                  alignItems: form.notificationEnabled
+                    ? "flex-end"
+                    : "flex-start",
+                }}
+              >
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: "white",
+                  }}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {form.notificationEnabled && (
+              <View>
+                {form.times.map((timeSlot, index) => {
+                  // Get the custom time if set, otherwise use default placeholder
+                  const customTime = form.notificationTimes?.[timeSlot]
+                  const displayTime = customTime || timeSlot
+
+                  // Helper to get Date object from string
+                  const getTimeDate = (str) => {
+                    const d = new Date()
+                    const presets = {
+                      Morning: { hour: 8, minute: 0 },
+                      Noon: { hour: 12, minute: 0 },
+                      Evening: { hour: 18, minute: 0 },
+                      Night: { hour: 21, minute: 0 },
+                      "Before Meal": { hour: 7, minute: 30 },
+                      "After Meal": { hour: 8, minute: 30 },
+                    }
+
+                    if (presets[str]) {
+                      d.setHours(presets[str].hour, presets[str].minute, 0, 0)
+                      return d
+                    }
+
+                    // Parse "H:MM AM/PM" format
+                    const match = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)
+                    if (match) {
+                      let h = parseInt(match[1], 10)
+                      const m = parseInt(match[2], 10)
+                      const period = match[3].toUpperCase()
+                      if (period === "PM" && h !== 12) h += 12
+                      if (period === "AM" && h === 12) h = 0
+                      d.setHours(h, m, 0, 0)
+                      return d
+                    }
+
+                    d.setHours(8, 0, 0, 0)
+                    return d
+                  }
+
+                  return (
+                    <View
+                      key={`notify-${index}`}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        height: 48,
+                        backgroundColor: Colors.surfaceHighlight,
+                        borderRadius: Layout.radius.md,
+                        paddingHorizontal: Spacing.md,
+                        marginBottom:
+                          index < form.times.length - 1 ? Spacing.sm : 0,
+                        borderWidth: 1,
+                        borderColor: Colors.white10,
+                      }}
+                    >
+                      <Text
+                        style={{ color: Colors.textPrimary, fontWeight: "500" }}
+                      >
+                        {timeSlot}
+                      </Text>
+                      <DateTimePicker
+                        value={getTimeDate(displayTime)}
+                        mode="time"
+                        display="compact"
+                        onChange={(e, date) => {
+                          if (date) {
+                            let h = date.getHours()
+                            const m = String(date.getMinutes()).padStart(2, "0")
+                            const period = h >= 12 ? "PM" : "AM"
+                            if (h > 12) h -= 12
+                            if (h === 0) h = 12
+                            const newTimeStr = `${h}:${m} ${period}`
+
+                            setForm({
+                              ...form,
+                              notificationTimes: {
+                                ...form.notificationTimes,
+                                [timeSlot]: newTimeStr,
+                              },
+                            })
+                          }
+                        }}
+                        themeVariant="dark"
+                        style={{ marginRight: -8 }}
+                      />
+                    </View>
+                  )
+                })}
               </View>
             )}
           </View>

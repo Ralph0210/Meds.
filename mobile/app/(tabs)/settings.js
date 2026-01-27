@@ -34,6 +34,10 @@ import {
 import { Colors, Spacing, Layout, Typography } from "../../theme"
 import { ICONS } from "../../theme/icons"
 import EditMedicationModal from "../../components/EditMedicationModal"
+import {
+  rescheduleNotificationsForMedication,
+  cancelNotificationsForMedication,
+} from "../../lib/notificationService"
 
 export default function SettingsScreen() {
   const queryClient = useQueryClient()
@@ -78,11 +82,17 @@ export default function SettingsScreen() {
         payload.keys = payload.times.map((t, i) => `med_${baseId}_${i}`)
       }
 
+      let savedId = payload.id
       if (isNew) {
         delete payload.id
-        await addMedication(payload)
+        savedId = await addMedication(payload)
       } else {
         await updateMedication(payload)
+      }
+
+      // Schedule or cancel notifications based on notificationEnabled
+      if (savedId) {
+        await rescheduleNotificationsForMedication({ ...payload, id: savedId })
       }
 
       queryClient.invalidateQueries(["medications"])
@@ -95,6 +105,8 @@ export default function SettingsScreen() {
   const handleDeleteMedication = async (med) => {
     try {
       if (med.id) {
+        // Cancel notifications before deleting
+        await cancelNotificationsForMedication(med.id)
         await deleteMedication(med.id)
         queryClient.invalidateQueries(["medications"])
         handleClose()
