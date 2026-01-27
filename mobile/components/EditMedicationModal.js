@@ -12,7 +12,13 @@ import {
 } from "react-native"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { BlurView } from "expo-blur"
-import { X, Trash2, Check, ChevronRight } from "lucide-react-native"
+import {
+  X,
+  Trash2,
+  Check,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react-native"
 import { Colors, Spacing, Layout, Typography } from "../theme"
 import { ICONS, ICON_KEYS } from "../theme/icons"
 import Dropdown from "./Dropdown"
@@ -38,6 +44,8 @@ export default function EditMedicationModal({
     getFinalDosage,
     SUPPORTED_COLORS,
   } = useMedicationForm(medication)
+
+  const [personalizeExpanded, setPersonalizeExpanded] = useState(false)
 
   const handleSave = () => {
     if (!form.name) {
@@ -795,7 +803,11 @@ export default function EditMedicationModal({
                       }}
                     >
                       <Text
-                        style={{ color: Colors.textPrimary, fontWeight: "500" }}
+                        style={{
+                          color: Colors.textPrimary,
+                          fontSize: Typography.body.fontSize,
+                          fontWeight: "600",
+                        }}
                       >
                         {timeSlot}
                       </Text>
@@ -831,63 +843,134 @@ export default function EditMedicationModal({
             )}
           </View>
 
-          {/* Color/Icon */}
+          {/* Personalize - Collapsible Section */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Color Tag</Text>
-            <View style={styles.colorGrid}>
-              {SUPPORTED_COLORS.map((c) => {
-                const isSelected = form.color === c
-                return (
-                  <TouchableOpacity
-                    key={c}
-                    style={[
-                      styles.colorCell,
-                      isSelected && {
-                        borderWidth: 2,
-                        borderColor: Colors.primary,
-                        backgroundColor: "transparent",
-                        padding: 3, // Creates the gap
-                      },
-                      !isSelected && { backgroundColor: c },
-                    ]}
-                    onPress={() => setForm({ ...form, color: c })}
+            <TouchableOpacity
+              onPress={() => setPersonalizeExpanded(!personalizeExpanded)}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text style={[styles.label, { marginBottom: 0 }]}>
+                Personalize
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: Spacing.sm,
+                }}
+              >
+                {/* Preview when collapsed */}
+                {!personalizeExpanded && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: Spacing.sm,
+                    }}
                   >
-                    {isSelected && (
-                      <View
-                        style={{
-                          flex: 1,
-                          width: "100%",
-                          borderRadius: 999,
-                          backgroundColor: c,
-                        }}
-                      />
-                    )}
-                  </TouchableOpacity>
-                )
-              })}
-            </View>
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Icon</Text>
-            <View style={styles.iconGrid}>
-              {ICON_KEYS.map((key) => {
-                const IconComp = ICONS[key]
-                const isActive = form.icon === key
-                return (
-                  <TouchableOpacity
-                    key={key}
-                    style={[styles.iconCell, isActive && styles.iconCellActive]}
-                    onPress={() => setForm({ ...form, icon: key })}
-                  >
-                    <IconComp
-                      size={24}
-                      color={isActive ? Colors.primary : Colors.textSecondary}
+                    <View
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: form.color,
+                      }}
                     />
-                  </TouchableOpacity>
-                )
-              })}
-            </View>
+                    {(() => {
+                      const IconComp = ICONS[form.icon]
+                      return IconComp ? (
+                        <IconComp size={20} color={Colors.textSecondary} />
+                      ) : null
+                    })()}
+                  </View>
+                )}
+                <ChevronDown
+                  size={20}
+                  color={Colors.textSecondary}
+                  style={{
+                    transform: [
+                      { rotate: personalizeExpanded ? "180deg" : "0deg" },
+                    ],
+                  }}
+                />
+              </View>
+            </TouchableOpacity>
+
+            {personalizeExpanded && (
+              <View style={{ marginTop: Spacing.md }}>
+                {/* Color Grid */}
+                <Text style={[styles.label, { fontSize: 13 }]}>Color</Text>
+                <View style={styles.colorGrid}>
+                  {SUPPORTED_COLORS.map((c) => {
+                    const isSelected = form.color === c
+                    return (
+                      <TouchableOpacity
+                        key={c}
+                        style={[
+                          styles.colorCell,
+                          isSelected && {
+                            borderWidth: 2,
+                            borderColor: Colors.primary,
+                            backgroundColor: "transparent",
+                            padding: 3,
+                          },
+                          !isSelected && { backgroundColor: c },
+                        ]}
+                        onPress={() => setForm({ ...form, color: c })}
+                      >
+                        {isSelected && (
+                          <View
+                            style={{
+                              flex: 1,
+                              width: "100%",
+                              borderRadius: 999,
+                              backgroundColor: c,
+                            }}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    )
+                  })}
+                </View>
+
+                {/* Icon Grid */}
+                <Text
+                  style={[
+                    styles.label,
+                    { fontSize: 13, marginTop: Spacing.md },
+                  ]}
+                >
+                  Icon
+                </Text>
+                <View style={styles.iconGrid}>
+                  {ICON_KEYS.map((key) => {
+                    const IconComp = ICONS[key]
+                    const isActive = form.icon === key
+                    return (
+                      <TouchableOpacity
+                        key={key}
+                        style={[
+                          styles.iconCell,
+                          isActive && styles.iconCellActive,
+                        ]}
+                        onPress={() => setForm({ ...form, icon: key })}
+                      >
+                        <IconComp
+                          size={24}
+                          color={
+                            isActive ? Colors.primary : Colors.textSecondary
+                          }
+                        />
+                      </TouchableOpacity>
+                    )
+                  })}
+                </View>
+              </View>
+            )}
           </View>
 
           <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
