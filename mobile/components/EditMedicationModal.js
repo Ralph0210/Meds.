@@ -28,6 +28,7 @@ import {
   requestPermissions,
   hasNotificationPermission,
 } from "../lib/notificationService"
+import { t } from "../lib/i18n"
 
 export default function EditMedicationModal({
   visible,
@@ -49,24 +50,18 @@ export default function EditMedicationModal({
 
   const handleSave = () => {
     if (!form.name) {
-      Alert.alert("Missing Name", "Please enter a medication name.")
+      Alert.alert(t("alert.missingName"), t("alert.enterName"))
       return
     }
 
     // Validation for Course Type
     if (form.type === "course") {
       if (!form.config.courseDuration) {
-        Alert.alert(
-          "Missing Duration",
-          "Please enter the duration value (e.g. number of days or pills).",
-        )
+        Alert.alert(t("alert.missingDuration"), t("alert.enterDuration"))
         return
       }
       if (!form.config.startDate) {
-        Alert.alert(
-          "Missing Start Date",
-          "Please select a start date for the course.",
-        )
+        Alert.alert(t("alert.missingStartDate"), t("alert.selectStartDate"))
         return
       }
     }
@@ -75,10 +70,10 @@ export default function EditMedicationModal({
   }
 
   const handleDelete = () => {
-    Alert.alert("Delete Medication?", "This action cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("alert.deleteMedication"), t("alert.cannotUndo"), [
+      { text: t("button.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("button.delete"),
         style: "destructive",
         onPress: () => onDelete(medication),
       },
@@ -91,12 +86,12 @@ export default function EditMedicationModal({
 
   const renderIntervalForm = () => (
     <View style={styles.subForm}>
-      <Text style={styles.sectionHeader}>Interval Settings</Text>
+      <Text style={styles.sectionHeader}>{t("form.intervalSettings")}</Text>
       <View style={styles.formGroup}>
-        <Text style={styles.label}>Repeat Every (Days)</Text>
+        <Text style={styles.label}>{t("form.repeatEvery")}</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g. 2"
+          placeholder={t("form.namePlaceholder")}
           keyboardType="numeric"
           placeholderTextColor={Colors.textTertiary}
           value={form.config.intervalDays}
@@ -104,7 +99,7 @@ export default function EditMedicationModal({
         />
       </View>
       <View style={styles.formGroup}>
-        <Text style={styles.label}>Next Due Date</Text>
+        <Text style={styles.label}>{t("form.nextDueDate")}</Text>
         <TextInput
           style={styles.input}
           placeholder="YYYY-MM-DD"
@@ -127,7 +122,7 @@ export default function EditMedicationModal({
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>
-            {isNew ? "Add Medication" : "Edit Medication"}
+            {isNew ? t("button.addMedication") : t("button.saveMedication")}
           </Text>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <X color={Colors.textPrimary} size={24} />
@@ -137,10 +132,10 @@ export default function EditMedicationModal({
         <ScrollView style={styles.modalContent}>
           {/* 1. Name */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Name</Text>
+            <Text style={styles.label}>{t("form.name")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g. Metformin"
+              placeholder={t("form.namePlaceholder")}
               placeholderTextColor={Colors.textTertiary}
               value={form.name}
               onChangeText={(t) => setForm({ ...form, name: t })}
@@ -149,7 +144,7 @@ export default function EditMedicationModal({
 
           {/* 2. Amount (Take [1 pill]) */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Take</Text>
+            <Text style={styles.label}>{t("form.take")}</Text>
             <View style={{ flexDirection: "row", gap: Spacing.sm, zIndex: 10 }}>
               <View style={{ flex: 1 }}>
                 <TextInput
@@ -162,9 +157,17 @@ export default function EditMedicationModal({
                 />
               </View>
               <Dropdown
-                value={form.dosageUnit}
-                options={["pill", "mg", "ml"]}
-                onChange={(val) => setForm({ ...form, dosageUnit: val })}
+                value={t(`unit.${form.dosageUnit || "pill"}`)}
+                options={[t("unit.pill"), t("unit.mg"), t("unit.ml")]}
+                onChange={(val) => {
+                  // val is translated, find key
+                  const map = {
+                    [t("unit.pill")]: "pill",
+                    [t("unit.mg")]: "mg",
+                    [t("unit.ml")]: "ml",
+                  }
+                  setForm({ ...form, dosageUnit: map[val] || "pill" })
+                }}
                 width={100}
               />
             </View>
@@ -175,7 +178,7 @@ export default function EditMedicationModal({
               style={{ marginTop: Spacing.sm }}
               contentContainerStyle={{ gap: Spacing.xs }}
             >
-              {(form.dosageUnit === "pill"
+              {(form.dosageUnit === "pill" || !form.dosageUnit
                 ? ["1/4", "1/2", "1", "2", "3"]
                 : ["5", "10", "20", "50", "100", "200", "500", "1000"]
               ).map((val) => {
@@ -202,7 +205,7 @@ export default function EditMedicationModal({
 
           {/* 3. Frequency & Schedule Group */}
           <View style={[styles.formGroup, { zIndex: 9 }]}>
-            <Text style={styles.label}>Frequency</Text>
+            <Text style={styles.label}>{t("form.frequency")}</Text>
 
             <View
               style={{
@@ -216,22 +219,22 @@ export default function EditMedicationModal({
                 <Dropdown
                   value={
                     form.type === "cyclic"
-                      ? "On and off (Cyclic)"
+                      ? t("form.cyclicSchedule")
                       : form.type === "interval"
-                        ? "Every X Days"
+                        ? t("form.intervalSchedule")
                         : form.frequency === "1x Daily"
-                          ? "Once a day"
+                          ? t("form.onceDay")
                           : form.frequency === "2x Daily"
-                            ? "Twice a day"
+                            ? t("form.twiceDay")
                             : form.frequency === "3x Daily"
-                              ? "3 times a day"
-                              : "Custom Schedule"
+                              ? t("form.threeDay")
+                              : t("form.customSchedule")
                   }
                   options={[
-                    "Once a day",
-                    "Twice a day",
-                    "3 times a day",
-                    "Custom Schedule",
+                    t("form.onceDay"),
+                    t("form.twiceDay"),
+                    t("form.threeDay"),
+                    t("form.customSchedule"),
                   ]}
                   onChange={(label) => {
                     if (false) {
@@ -247,13 +250,13 @@ export default function EditMedicationModal({
                       let freq = "Custom"
                       let times = [...form.times]
 
-                      if (label === "Once a day") {
+                      if (label === t("form.onceDay")) {
                         freq = "1x Daily"
                         times = ["Morning"]
-                      } else if (label === "Twice a day") {
+                      } else if (label === t("form.twiceDay")) {
                         freq = "2x Daily"
                         times = ["Morning", "Night"]
-                      } else if (label === "3 times a day") {
+                      } else if (label === t("form.threeDay")) {
                         freq = "3x Daily"
                         times = ["Morning", "Noon", "Night"]
                       }
@@ -274,7 +277,7 @@ export default function EditMedicationModal({
               {(form.type === "daily" || form.type === "course") && (
                 <View style={{ flex: 1 }}>
                   {form.times.map((time, index) => {
-                    const presets = [
+                    const PRESET_KEYS = [
                       "Morning",
                       "Noon",
                       "Evening",
@@ -283,9 +286,21 @@ export default function EditMedicationModal({
                       "After Meal",
                       "Time",
                     ]
+                    const PRESET_MAP = {
+                      Morning: t("time.morning"),
+                      Noon: t("time.noon"),
+                      Evening: t("time.evening"),
+                      Night: t("time.night"),
+                      "Before Meal": t("time.beforeMeal"),
+                      "After Meal": t("time.afterMeal"),
+                      Time: t("time.time"),
+                    }
 
-                    // Check if current value is a keyword preset
-                    const isKeyword = presets.includes(time) && time !== "Time"
+                    const displayPresets = PRESET_KEYS.map((k) => PRESET_MAP[k])
+
+                    // Check if current value is a keyword preset (English)
+                    const isKeyword =
+                      PRESET_KEYS.includes(time) && time !== "Time"
 
                     // If not a keyword, it's a specific time (or "Time" placeholder)
                     const isTimeMode = !isKeyword
@@ -293,7 +308,7 @@ export default function EditMedicationModal({
                     // Helper to get Date object from string "H:MM AM"
                     const getTimeDate = (str) => {
                       const d = new Date()
-                      if (!str || presets.includes(str)) {
+                      if (!str || PRESET_KEYS.includes(str)) {
                         d.setHours(8, 0, 0, 0) // Default 8 AM
                         return d
                       }
@@ -363,16 +378,20 @@ export default function EditMedicationModal({
                                 }}
                               />
                               <Dropdown
-                                value="Time"
-                                options={presets}
+                                value={t("time.time")}
+                                options={displayPresets}
                                 iconOnly={true}
                                 menuWidth={120}
                                 onChange={(val) => {
+                                  // val is localized. Find English key.
+                                  const key = PRESET_KEYS.find(
+                                    (k) => PRESET_MAP[k] === val,
+                                  )
                                   const newTimes = [...form.times]
-                                  if (val === "Time") {
+                                  if (key === "Time") {
                                     newTimes[index] = "8:00 AM"
                                   } else {
-                                    newTimes[index] = val
+                                    newTimes[index] = key || val
                                   }
                                   setForm({ ...form, times: newTimes })
                                 }}
@@ -417,51 +436,49 @@ export default function EditMedicationModal({
                                   }}
                                   themeVariant="dark"
                                   style={{
-                                    transform: [{ scale: 1.1 }],
-                                    marginLeft: -10,
+                                    transform: [{ scale: 1 }], // Original scale for single
                                   }}
                                 />
                               </View>
-                              <View
-                                style={{ width: 44, alignItems: "flex-end" }}
-                              >
-                                <Dropdown
-                                  value="Time"
-                                  options={presets}
-                                  iconOnly={true}
-                                  menuWidth={120}
-                                  onChange={(val) => {
-                                    const newTimes = [...form.times]
-                                    if (val === "Time") {
-                                      newTimes[index] = "8:00 AM"
-                                    } else {
-                                      newTimes[index] = val
-                                    }
-                                    setForm({ ...form, times: newTimes })
-                                  }}
-                                  width="100%"
-                                />
-                              </View>
+                              {/* Revert Button */}
+                              <Dropdown
+                                value={t("time.time")}
+                                options={displayPresets}
+                                iconOnly={true}
+                                menuWidth={120}
+                                onChange={(val) => {
+                                  const key = PRESET_KEYS.find(
+                                    (k) => PRESET_MAP[k] === val,
+                                  )
+                                  const newTimes = [...form.times]
+                                  newTimes[index] = key || val
+                                  setForm({ ...form, times: newTimes })
+                                }}
+                                width={48} // Slightly wider for single view
+                              />
                             </>
                           )
                         ) : (
-                          <View style={{ flex: 1 }}>
-                            <Dropdown
-                              value={time}
-                              options={presets}
-                              onChange={(val) => {
-                                const newTimes = [...form.times]
-                                if (val === "Time") {
-                                  newTimes[index] = "8:00 AM"
-                                } else {
-                                  newTimes[index] = val
-                                }
-                                setForm({ ...form, times: newTimes })
-                              }}
-                              width="100%"
-                            />
-                          </View>
+                          /* Preset Mode (e.g. "Morning") */
+                          <Dropdown
+                            value={PRESET_MAP[time] || time}
+                            options={displayPresets}
+                            onChange={(val) => {
+                              const key = PRESET_KEYS.find(
+                                (k) => PRESET_MAP[k] === val,
+                              )
+                              const newTimes = [...form.times]
+                              if (key === "Time") {
+                                newTimes[index] = "8:00 AM" // Switch to default custom time
+                              } else {
+                                newTimes[index] = key || val
+                              }
+                              setForm({ ...form, times: newTimes })
+                            }}
+                            width="100%"
+                          />
                         )}
+                        {/* Remove Button for Multi-slot */}
                         {form.times.length > 1 && (
                           <TouchableOpacity
                             onPress={() => {
@@ -535,7 +552,7 @@ export default function EditMedicationModal({
                 }}
               >
                 <Text style={[styles.label, { marginBottom: 0 }]}>
-                  Set Duration
+                  {t("form.setDuration")}
                 </Text>
                 <TouchableOpacity
                   onPress={() =>
@@ -580,8 +597,8 @@ export default function EditMedicationModal({
                         style={styles.input}
                         placeholder={
                           form.config.durationMode === "quantity"
-                            ? "e.g. 30"
-                            : "e.g. 10"
+                            ? t("form.durationQuantityPlaceholder")
+                            : t("form.durationDaysPlaceholder")
                         }
                         keyboardType="numeric"
                         placeholderTextColor={Colors.textTertiary}
@@ -592,21 +609,24 @@ export default function EditMedicationModal({
                     <Dropdown
                       value={
                         form.config.durationMode === "quantity"
-                          ? form.dosageUnit || "pill"
-                          : "days"
+                          ? t(`unit.${form.dosageUnit || "pill"}`)
+                          : t("form.days")
                       }
-                      options={[form.dosageUnit || "pill", "days"]}
+                      options={[
+                        t(`unit.${form.dosageUnit || "pill"}`),
+                        t("form.days"),
+                      ]}
                       onChange={(val) =>
                         updateConfig(
                           "durationMode",
-                          val === "days" ? "days" : "quantity",
+                          val === t("form.days") ? "days" : "quantity",
                         )
                       }
                       width={110}
                     />
                   </View>
                   <View style={{ marginTop: Spacing.md }}>
-                    <Text style={styles.label}>Start Date</Text>
+                    <Text style={styles.label}>{t("form.startDate")}</Text>
                     {Platform.OS === "ios" ? (
                       <View style={{ alignItems: "flex-start" }}>
                         <DateTimePicker
@@ -660,7 +680,7 @@ export default function EditMedicationModal({
               <View style={{ marginTop: Spacing.md }}>
                 <View style={{ flexDirection: "row", gap: Spacing.md }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.label}>Cycle Length (Days)</Text>
+                    <Text style={styles.label}>{t("form.cycleLength")}</Text>
                     <TextInput
                       style={styles.input}
                       placeholder="28"
@@ -671,7 +691,7 @@ export default function EditMedicationModal({
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.label}>Active Days</Text>
+                    <Text style={styles.label}>{t("form.activeDays")}</Text>
                     <TextInput
                       style={styles.input}
                       placeholder="21"
@@ -697,7 +717,7 @@ export default function EditMedicationModal({
               }}
             >
               <Text style={[styles.label, { marginBottom: 0 }]}>
-                Reminder Notifications
+                {t("form.reminderNotifications")}
               </Text>
               <TouchableOpacity
                 onPress={async () => {
@@ -708,8 +728,8 @@ export default function EditMedicationModal({
                       const granted = await requestPermissions()
                       if (!granted) {
                         Alert.alert(
-                          "Notifications Disabled",
-                          "Please enable notifications in your device settings to receive medication reminders.",
+                          t("alert.notificationsDisabled"),
+                          t("alert.enableNotifications"),
                           [{ text: "OK" }],
                         )
                         return
@@ -809,7 +829,18 @@ export default function EditMedicationModal({
                           fontWeight: "600",
                         }}
                       >
-                        {timeSlot}
+                        {(() => {
+                          const map = {
+                            Morning: t("time.morning"),
+                            Noon: t("time.noon"),
+                            Evening: t("time.evening"),
+                            Night: t("time.night"),
+                            "Before Meal": t("time.beforeMeal"),
+                            "After Meal": t("time.afterMeal"),
+                            Time: t("time.time"),
+                          }
+                          return map[timeSlot] || timeSlot
+                        })()}
                       </Text>
                       <DateTimePicker
                         value={getTimeDate(displayTime)}
@@ -854,7 +885,7 @@ export default function EditMedicationModal({
               }}
             >
               <Text style={[styles.label, { marginBottom: 0 }]}>
-                Personalize
+                {t("form.personalize")}
               </Text>
               <View
                 style={{
@@ -903,7 +934,9 @@ export default function EditMedicationModal({
             {personalizeExpanded && (
               <View style={{ marginTop: Spacing.md }}>
                 {/* Color Grid */}
-                <Text style={[styles.label, { fontSize: 13 }]}>Color</Text>
+                <Text style={[styles.label, { fontSize: 13 }]}>
+                  {t("form.color")}
+                </Text>
                 <View style={styles.colorGrid}>
                   {SUPPORTED_COLORS.map((c) => {
                     const isSelected = form.color === c
@@ -944,7 +977,7 @@ export default function EditMedicationModal({
                     { fontSize: 13, marginTop: Spacing.md },
                   ]}
                 >
-                  Icon
+                  {t("form.icon")}
                 </Text>
                 <View style={styles.iconGrid}>
                   {ICON_KEYS.map((key) => {
@@ -974,14 +1007,14 @@ export default function EditMedicationModal({
           </View>
 
           <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-            <Text style={styles.saveBtnText}>Save Medication</Text>
+            <Text style={styles.saveBtnText}>{t("button.saveMedication")}</Text>
           </TouchableOpacity>
 
           {!isNew && (
             <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
               <Trash2 color={Colors.danger} size={20} />
               <Text style={[styles.deleteText, { color: Colors.danger }]}>
-                Delete Medication
+                {t("button.deleteMedication")}
               </Text>
             </TouchableOpacity>
           )}

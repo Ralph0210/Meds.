@@ -5,6 +5,7 @@ import AnimatedCheckbox from "./AnimatedCheckbox"
 import { LinearGradient } from "expo-linear-gradient"
 import { Colors, Spacing, Layout, Typography } from "../theme"
 import { ICONS } from "../theme/icons"
+import { t } from "../lib/i18n"
 
 export default function MedicationCard({
   config,
@@ -20,11 +21,57 @@ export default function MedicationCard({
 
   // Helper for dosage text
   const getDosageText = () => {
-    if (config.dosage) return config.dosage
-    const qty = config.dosageQuantity || ""
-    const unit = config.dosageUnit || "pills" // Default to pills if missing
-    if (!qty && !unit) return ""
+    // Try structured data first for translation
+    let qty = config.dosageQuantity
+    let rawUnit = config.dosageUnit
+
+    // Fallback: parse string if needed (legacy support)
+    if (!qty && config.dosage) {
+      const match = config.dosage.match(/^([\d.]+)\s*(.+)$/)
+      if (match) {
+        qty = match[1]
+        let u = match[2].toLowerCase()
+        if (u.includes("pill")) rawUnit = "pill"
+        else if (u === "mg") rawUnit = "mg"
+        else if (u === "ml") rawUnit = "ml"
+      }
+    }
+    if (!qty) return config.dosage || ""
+
+    // Default unit
+    if (!rawUnit) rawUnit = "pill"
+
+    // Translate unit
+    const unit = t(`unit.${rawUnit}`)
+
     return `${qty} ${unit}`.trim()
+  }
+
+  // Helper to translate frequency strings
+  const getFrequencyText = (freq) => {
+    if (!freq) return ""
+    const map = {
+      "1x Daily": t("form.onceDay"),
+      "2x Daily": t("form.twiceDay"),
+      "3x Daily": t("form.threeDay"),
+      Custom: t("form.customSchedule"),
+    }
+    return map[freq] || freq
+  }
+
+  // Helper to translate time labels
+  const getTimeLabel = (label) => {
+    if (!label) return ""
+    const map = {
+      Morning: t("time.morning"),
+      Noon: t("time.noon"),
+      Evening: t("time.evening"),
+      Night: t("time.night"),
+      "Before Meal": t("time.beforeMeal"),
+      "After Meal": t("time.afterMeal"),
+      Time: t("time.time"),
+    }
+    return map[label] || label
   }
 
   // Wrapper Component for consistent styles
@@ -71,12 +118,12 @@ export default function MedicationCard({
                 <Text style={styles.cardTitle}>{config.name}</Text>
                 <Text style={styles.cardDesc}>
                   {getDosageText()}
-                  {label ? ` • ${label}` : ""}
+                  {label ? ` • ${getTimeLabel(label)}` : ""}
                 </Text>
               </View>
             ) : (
               <View style={{ flex: 1 }}>
-                <Text style={styles.timeLabel}>{label}</Text>
+                <Text style={styles.timeLabel}>{getTimeLabel(label)}</Text>
               </View>
             )}
 
@@ -106,7 +153,9 @@ export default function MedicationCard({
             <Text style={styles.cardTitle}>{config.name}</Text>
             <Text style={styles.cardDesc}>
               {getDosageText()}
-              {config.frequency ? `, ${config.frequency}` : ""}
+              {config.frequency
+                ? `, ${getFrequencyText(config.frequency)}`
+                : ""}
             </Text>
           </View>
           <View>
@@ -121,7 +170,7 @@ export default function MedicationCard({
                   <View
                     style={[styles.dailyRow, { paddingVertical: Spacing.xs }]}
                   >
-                    <Text style={styles.timeLabel}>{label}</Text>
+                    <Text style={styles.timeLabel}>{getTimeLabel(label)}</Text>
                     {!disabled && (
                       <AnimatedCheckbox
                         checked={checked}
@@ -307,7 +356,7 @@ export default function MedicationCard({
                 <View
                   style={[styles.dailyRow, { paddingVertical: Spacing.xs }]}
                 >
-                  <Text style={styles.timeLabel}>{label}</Text>
+                  <Text style={styles.timeLabel}>{getTimeLabel(label)}</Text>
                   {!disabled && (
                     <AnimatedCheckbox
                       checked={checked}
@@ -401,6 +450,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontSize: Typography.subtitle.fontSize,
     fontWeight: "bold",
+    marginBottom: Spacing.xs,
   },
   cardDesc: {
     color: Colors.white60,

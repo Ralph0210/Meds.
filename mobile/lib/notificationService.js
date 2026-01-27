@@ -1,6 +1,7 @@
 import * as Notifications from "expo-notifications"
 import * as Device from "expo-device"
 import { getMedications } from "./db"
+import { t } from "./i18n"
 
 // Configure how notifications should be handled when app is in foreground
 Notifications.setNotificationHandler({
@@ -162,15 +163,22 @@ export const rebuildAllNotifications = async () => {
     let body
     if (meds.length === 1) {
       const med = meds[0]
-      body = `Take ${med.name}${med.dosage ? ` (${med.dosage})` : ""}`
+      const nameWithDosage = med.name + (med.dosage ? ` (${med.dosage})` : "")
+      body = t("notification.takeSingle", { name: nameWithDosage })
     } else if (meds.length === 2) {
-      body = `Take ${meds[0].name} and ${meds[1].name}`
+      body = t("notification.takeTwo", {
+        name1: meds[0].name,
+        name2: meds[1].name,
+      })
     } else {
       const firstTwo = meds
         .slice(0, 2)
         .map((m) => m.name)
         .join(", ")
-      body = `Take ${firstTwo}, and ${meds.length - 2} more`
+      body = t("notification.takeMore", {
+        names: firstTwo,
+        count: meds.length - 2,
+      })
     }
 
     const notificationId = `med_reminder_${timeKey}`
@@ -179,7 +187,7 @@ export const rebuildAllNotifications = async () => {
       await Notifications.scheduleNotificationAsync({
         identifier: notificationId,
         content: {
-          title: "Medication Reminder",
+          title: t("notification.title"),
           body,
           data: {
             type: "medication_reminder",

@@ -1,0 +1,144 @@
+{
+  "greeting": {
+    "morning": "Good Morning",
+    "afternoon": "Good Afternoon",
+    "evening": "Good Evening"
+  },
+  "date": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "yesterday": "Yesterday",
+    "weekday": {
+      "0": "S",
+      "1": "M",
+      "2": "T",
+      "3": "W",
+      "4": "T",
+      "5": "F",
+      "6": "S"
+    }
+  },
+  "home": {
+    "loading": "Loading config...",
+    "emptyTitle": "All Clear",
+    "emptyDesc": "No medications scheduled for today."
+  },
+  "manager": {
+    "title": "Manager",
+    "unnamedMedication": "Unnamed Medication"
+  },
+  "button": {
+    "addMedication": "Add Medication",
+    "saveMedication": "Save Medication",
+    "deleteMedication": "Delete Medication",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "close": "Close",
+    "gotIt": "Got it"
+  },
+
+  "settings": {
+    "title": "Settings",
+    "feedback": "Send Feedback",
+    "privacy": "Privacy",
+    "about": "About"
+  },
+  "privacy": {
+    "title": "Your Privacy",
+    "localStorage": "100% Local Storage",
+    "localStorageDesc": "All your data stays on your device. Nothing is uploaded to any server.",
+    "noAccounts": "No Accounts Required",
+    "noAccountsDesc": "Use the app without signing up or providing any personal information.",
+    "noAnalytics": "No Analytics or Tracking",
+    "noAnalyticsDesc": "We don't collect usage data, crash reports, or analytics.",
+    "yourData": "Your Data, Your Control",
+    "yourDataDesc": "Delete the app and all your data is gone. No backups, no traces.",
+    "learnMore": "Learn more about your privacy"
+  },
+  "about": {
+    "appName": "Meds.",
+    "version": "Version 1.0.0",
+    "desc": "A simple, private medication tracker.",
+    "madeWith": "Made with ❤️ for people who value their privacy."
+  },
+  "history": {
+    "medications": "Medications",
+    "noActive": "No active medications.",
+    "medication": "Medication"
+  },
+  "onboarding": {
+    "slide1Title": "Track your meds, your way",
+    "slide1Body": "A simple tool to help you remember. No accounts, no tracking, no ads.",
+    "slide1Button": "Get started",
+    "slide2Title": "How it works",
+    "slide2Step1": "Add your medications in settings",
+    "slide2Step2": "Mark them as taken",
+    "slide2Step3": "That's it",
+    "slide2Button": "Continue",
+    "slide3Title": "Your data stays yours",
+    "slide3Body": "Everything is stored on your device. We can't see your data—it's yours alone.",
+    "slide3Button": "Start using the app"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "e.g. Metformin",
+    "take": "Take",
+    "frequency": "Frequency",
+    "onceDay": "Once a day",
+    "twiceDay": "Twice a day",
+    "threeDay": "3 times a day",
+    "customSchedule": "Custom Schedule",
+    "startDate": "Start Date",
+    "cycleLength": "Cycle Length (Days)",
+    "activeDays": "Active Days",
+    "reminderNotifications": "Reminder Notifications",
+    "personalize": "Personalization",
+    "color": "Color",
+    "icon": "Icon",
+    "intervalSettings": "Interval Settings",
+    "repeatEvery": "Repeat Every (Days)",
+    "nextDueDate": "Next Due Date",
+    "cyclicSettings": "Cyclic Settings",
+    "courseSettings": "Course Settings",
+    "courseDuration": "Duration",
+    "setDuration": "Set Duration",
+    "courseDurationPlaceholder": "e.g. 10",
+    "intervalSchedule": "Every X Days",
+    "cyclicSchedule": "On and off (Cyclic)",
+    "days": "Days"
+  },
+  "unit": {
+    "pill": "pill",
+    "mg": "mg",
+    "ml": "ml"
+  },
+  "alert": {
+    "error": "Error",
+    "missingName": "Missing Name",
+    "enterName": "Please enter a medication name.",
+    "missingDuration": "Missing Duration",
+    "enterDuration": "Please enter the duration value (e.g. number of days or pills).",
+    "missingStartDate": "Missing Start Date",
+    "selectStartDate": "Please select a start date for the course.",
+    "deleteMedication": "Delete Medication?",
+    "cannotUndo": "This action cannot be undone.",
+    "notificationsDisabled": "Notifications Disabled",
+    "enableNotifications": "Please enable notifications in your device settings to receive medication reminders.",
+    "failedDelete": "Failed to delete"
+  },
+  "notification": {
+    "title": "Medication Reminder",
+    "takeSingle": "Take %{name}",
+    "takeTwo": "Take %{name1} and %{name2}",
+    "takeMore": "Take %{names}, and %{count} more"
+  },
+  "time": {
+    "morning": "Morning",
+    "noon": "Noon",
+    "evening": "Evening",
+    "night": "Night",
+    "beforeMeal": "Before Meal",
+    "afterMeal": "After Meal",
+    "time": "Time"
+  }
+}

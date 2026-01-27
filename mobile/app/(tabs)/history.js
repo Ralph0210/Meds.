@@ -16,8 +16,7 @@ import { getRecords, getMedications } from "../../lib/db"
 import { useAppStore } from "../../store/useAppStore"
 import CalendarGrid from "../../components/CalendarGrid"
 import { Colors, Spacing, Typography, Layout } from "../../theme"
-
-const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"]
+import { t, getCurrentLocale } from "../../lib/i18n"
 
 export default function HistoryScreen() {
   const router = useRouter()
@@ -27,12 +26,12 @@ export default function HistoryScreen() {
   const startOfMonth = new Date(
     currentMonth.getFullYear(),
     currentMonth.getMonth(),
-    1
+    1,
   )
   const endOfMonth = new Date(
     currentMonth.getFullYear(),
     currentMonth.getMonth() + 1,
-    0
+    0,
   )
 
   // Fetch Data
@@ -154,10 +153,13 @@ export default function HistoryScreen() {
             <ChevronLeft color="#fff" size={24} />
           </TouchableOpacity>
           <Text style={styles.monthTitle}>
-            {currentMonth.toLocaleDateString("en-US", {
-              month: "long",
-              year: "numeric",
-            })}
+            {currentMonth.toLocaleDateString(
+              getCurrentLocale() === "zh-Hant" ? "zh-TW" : "en-US",
+              {
+                month: "long",
+                year: "numeric",
+              },
+            )}
           </Text>
           <TouchableOpacity
             onPress={() => changeMonth(1)}
@@ -168,9 +170,9 @@ export default function HistoryScreen() {
         </View>
 
         <View style={styles.weekRow}>
-          {WEEKDAYS.map((d, i) => (
+          {Array.from({ length: 7 }).map((_, i) => (
             <Text key={i} style={styles.weekdayText}>
-              {d}
+              {t(`date.weekday.${i}`)}
             </Text>
           ))}
         </View>
@@ -184,7 +186,7 @@ export default function HistoryScreen() {
 
         {/* Legend */}
         <View style={styles.legendContainer}>
-          <Text style={styles.legendTitle}>Medications</Text>
+          <Text style={styles.legendTitle}>{t("history.medications")}</Text>
           <View style={styles.legendGrid}>
             {config?.map((med, index) => (
               <View key={med.id || index} style={styles.legendItem}>
@@ -195,13 +197,13 @@ export default function HistoryScreen() {
                   ]}
                 />
                 <Text style={styles.legendText} numberOfLines={1}>
-                  {med.name || "Medication"}
+                  {med.name || t("history.medication")}
                 </Text>
               </View>
             ))}
             {(!config || config.length === 0) && (
               <Text style={{ color: Colors.textSecondary }}>
-                No active medications.
+                {t("history.noActive")}
               </Text>
             )}
           </View>

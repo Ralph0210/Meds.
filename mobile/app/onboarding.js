@@ -12,34 +12,35 @@ import { router } from "expo-router"
 import { Pill, Check, Shield } from "lucide-react-native"
 import { Colors, Spacing, Typography, Layout } from "../theme"
 import { useOnboarding } from "../hooks/useOnboarding"
+import { t } from "../lib/i18n"
 
 const { width } = Dimensions.get("window")
 
 const SLIDES = [
   {
     id: "1",
-    title: "Track your meds, your way",
-    body: "A simple tool to help you remember. No accounts, no tracking, no ads.",
-    button: "Get started",
+    title: t("onboarding.slide1Title"),
+    body: t("onboarding.slide1Body"),
+    button: t("onboarding.slide1Button"),
     Icon: Pill,
   },
   {
     id: "2",
-    title: "How it works",
+    title: t("onboarding.slide2Title"),
     body: null, // Custom content
-    button: "Continue",
+    button: t("onboarding.slide2Button"),
     Icon: Check,
     steps: [
-      "Add your medications in settings",
-      "Mark them as taken",
-      "That's it",
+      t("onboarding.slide2Step1"),
+      t("onboarding.slide2Step2"),
+      t("onboarding.slide2Step3"),
     ],
   },
   {
     id: "3",
-    title: "Your data stays yours",
-    body: "Everything is stored on your device. We can't see your data—it's yours alone.",
-    button: "Start using the app",
+    title: t("onboarding.slide3Title"),
+    body: t("onboarding.slide3Body"),
+    button: t("onboarding.slide3Button"),
     Icon: Shield,
   },
 ]

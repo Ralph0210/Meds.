@@ -16,6 +16,7 @@ import DateStrip from "../../components/DateStrip"
 import MedicationCard from "../../components/MedicationCard"
 import { Colors, Layout, Spacing, Typography } from "../../theme"
 import { CheckCircle2, Leaf } from "lucide-react-native"
+import { t, getCurrentLocale } from "../../lib/i18n"
 
 export default function HomeScreen() {
   const { selectedDate, resetToToday } = useAppStore()
@@ -27,14 +28,14 @@ export default function HomeScreen() {
     useCallback(() => {
       resetToToday()
       setFocusedDate(new Date())
-    }, [resetToToday])
+    }, [resetToToday]),
   )
 
   const getGreeting = () => {
     const hour = new Date().getHours()
-    if (hour < 12) return "Good Morning"
-    if (hour < 18) return "Good Afternoon"
-    return "Good Evening"
+    if (hour < 12) return t("greeting.morning")
+    if (hour < 18) return t("greeting.afternoon")
+    return t("greeting.evening")
   }
 
   // Helper to format date with Today/Tomorrow/Yesterday
@@ -47,16 +48,17 @@ export default function HomeScreen() {
 
     const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24))
 
-    const monthDay = date.toLocaleDateString("en-US", {
+    const locale = getCurrentLocale() === "zh-Hant" ? "zh-TW" : "en-US"
+    const monthDay = date.toLocaleDateString(locale, {
       month: "long",
       day: "numeric",
     })
 
-    if (diffDays === 0) return `Today, ${monthDay}`
-    if (diffDays === 1) return `Tomorrow, ${monthDay}`
-    if (diffDays === -1) return `Yesterday, ${monthDay}`
+    if (diffDays === 0) return `${t("date.today")}, ${monthDay}`
+    if (diffDays === 1) return `${t("date.tomorrow")}, ${monthDay}`
+    if (diffDays === -1) return `${t("date.yesterday")}, ${monthDay}`
 
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(locale, {
       weekday: "long",
       month: "long",
       day: "numeric",
@@ -225,7 +227,7 @@ export default function HomeScreen() {
         }
       >
         {configLoading && (
-          <Text style={{ color: "white" }}>Loading config...</Text>
+          <Text style={{ color: "white" }}>{t("home.loading")}</Text>
         )}
 
         {filteredMeds.length > 0 ? (
@@ -243,10 +245,8 @@ export default function HomeScreen() {
             <View style={styles.emptyIconBg}>
               <Leaf size={32} color={Colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>All Clear</Text>
-            <Text style={styles.emptyDesc}>
-              No medications scheduled for today.
-            </Text>
+            <Text style={styles.emptyTitle}>{t("home.emptyTitle")}</Text>
+            <Text style={styles.emptyDesc}>{t("home.emptyDesc")}</Text>
           </View>
         )}
 
