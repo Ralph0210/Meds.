@@ -1,15 +1,20 @@
 import * as Notifications from "expo-notifications"
 import * as Device from "expo-device"
+import * as Haptics from "expo-haptics"
 import { getMedications } from "./db"
 import { t } from "./i18n"
 
 // Configure how notifications should be handled when app is in foreground
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
+  handleNotification: async () => {
+    // Gentle success haptic for medication reminder
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    return {
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    };
+  },
 })
 
 // Default times for preset time slots (24-hour format)
@@ -189,6 +194,7 @@ export const rebuildAllNotifications = async () => {
         content: {
           title: t("notification.title"),
           body,
+          sound: true,  // Ensure default gentle iOS sound plays (background/foreground)
           data: {
             type: "medication_reminder",
             timeKey,
