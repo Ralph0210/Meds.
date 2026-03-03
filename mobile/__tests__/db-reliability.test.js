@@ -50,6 +50,7 @@ const createTestDb = () => {
           times: JSON.stringify(m.times || []),
           keys: JSON.stringify(m.keys || []),
           config: JSON.stringify(m.config || {}),
+          notificationTimes: JSON.stringify(m.notificationTimes || {}),
         }))
       }
       if (sql.includes("FROM records")) {
@@ -97,11 +98,13 @@ const createTestDb = () => {
           keys: JSON.parse(params[6] || "[]"),
           type: params[7],
           config: JSON.parse(params[8] || "{}"),
+          notificationEnabled: Boolean(params[9]),
+          notificationTimes: JSON.parse(params[10] || "{}"),
         })
         return { lastInsertRowId: medIdCounter }
       }
       if (sql.includes("UPDATE medications SET")) {
-        const id = params[9]
+        const id = params[11]
         const idx = tables.medications.findIndex((m) => m.id === id)
         if (idx !== -1) {
           tables.medications[idx] = {
@@ -115,6 +118,8 @@ const createTestDb = () => {
             keys: JSON.parse(params[6] || "[]"),
             type: params[7],
             config: JSON.parse(params[8] || "{}"),
+            notificationEnabled: Boolean(params[9]),
+            notificationTimes: JSON.parse(params[10] || "{}"),
           }
         }
       }

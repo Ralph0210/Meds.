@@ -121,11 +121,14 @@ export default function EditMedicationModal({
       <BlurView intensity={20} style={StyleSheet.absoluteFill} tint="dark" />
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <X color={Colors.textPrimary} size={24} />
+          </TouchableOpacity>
           <Text style={styles.modalTitle}>
             {isNew ? t("button.addMedication") : t("button.saveMedication")}
           </Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <X color={Colors.textPrimary} size={24} />
+          <TouchableOpacity onPress={handleSave} style={styles.saveHeaderBtn}>
+            <Check color={Colors.textOnPrimary} size={18} strokeWidth={3} />
           </TouchableOpacity>
         </View>
 
@@ -1006,10 +1009,6 @@ export default function EditMedicationModal({
             )}
           </View>
 
-          <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-            <Text style={styles.saveBtnText}>{t("button.saveMedication")}</Text>
-          </TouchableOpacity>
-
           {!isNew && (
             <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
               <Trash2 color={Colors.danger} size={20} />
@@ -1044,12 +1043,22 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.white10,
   },
   modalTitle: {
-    fontSize: Typography.title.fontSize,
+    flex: 1,
+    textAlign: "center",
+    fontSize: Typography.body.fontSize,
     fontWeight: "bold",
     color: Colors.textPrimary,
   },
   closeBtn: {
     padding: Spacing.sm,
+  },
+  saveHeaderBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: Layout.radius.full,
+    backgroundColor: Colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
   },
   modalContent: {
     flex: 1,
@@ -1168,18 +1177,6 @@ const styles = StyleSheet.create({
   iconCellActive: {
     borderWidth: 2,
     borderColor: Colors.primary,
-  },
-  saveBtn: {
-    backgroundColor: Colors.primary,
-    padding: Spacing.lg,
-    borderRadius: Layout.radius.lg,
-    alignItems: "center",
-    marginTop: Spacing.lg,
-  },
-  saveBtnText: {
-    color: Colors.textOnPrimary,
-    fontWeight: "bold",
-    fontSize: Typography.body.fontSize,
   },
   deleteBtn: {
     flexDirection: "row",
